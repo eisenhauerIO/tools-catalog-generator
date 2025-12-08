@@ -2,23 +2,28 @@
 
 import random
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 def generate_sales_data(
     products: List[Dict],
-    n_transactions: int = 500,
-    days_back: int = 30,
-    seed: int = None
+    date_start: str,
+    date_end: str,
+    seed: Optional[int] = None,
+    sale_probability: float = 0.7
 ) -> List[Dict]:
     """
-    Generate synthetic sales transactions from product data.
+    Generate synthetic daily sales transactions from product data.
+    
+    Generates one potential transaction per product per day. Each product-day
+    combination has a probability of generating a sale (default 70%).
     
     Args:
         products: List of product dictionaries (from simulator_product_data)
-        n_transactions: Number of transactions to generate (default: 500)
-        days_back: Number of days to spread transactions over (default: 30)
+        date_start: Start date in "YYYY-MM-DD" format
+        date_end: End date in "YYYY-MM-DD" format
         seed: Random seed for reproducibility (default: None)
+        sale_probability: Probability of a sale occurring for each product-day (default: 0.7)
     
     Returns:
         List of sales transaction dictionaries
@@ -26,40 +31,44 @@ def generate_sales_data(
     if seed is not None:
         random.seed(seed)
     
+    # Parse dates
+    start_date = datetime.strptime(date_start, "%Y-%m-%d")
+    end_date = datetime.strptime(date_end, "%Y-%m-%d")
+    
     sales = []
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days_back)
+    transaction_counter = 0
     
-    for i in range(n_transactions):
-        # Select random product
-        product = random.choice(products)
+    # Iterate through each day in the range
+    current_date = start_date
+    while current_date <= end_date:
+        # For each product, randomly decide if there's a sale
+        for product in products:
+            # Random chance of sale occurring
+            if random.random() < sale_probability:
+                transaction_counter += 1
+                
+                # Generate quantity (favor smaller quantities)
+                quantity = random.choices(
+                    [1, 2, 3, 4, 5],
+                    weights=[50, 25, 15, 7, 3]
+                )[0]
+                
+                # Calculate revenue
+                revenue = round(product["price"] * quantity, 2)
+                
+                transaction = {
+                    "transaction_id": f"TXN{transaction_counter:06d}",
+                    "product_id": product["product_id"],
+                    "product_name": product["name"],
+                    "category": product["category"],
+                    "quantity": quantity,
+                    "unit_price": product["price"],
+                    "revenue": revenue,
+                    "date": current_date.strftime("%Y-%m-%d")
+                }
+                sales.append(transaction)
         
-        # Generate quantity (favor smaller quantities)
-        quantity = random.choices(
-            [1, 2, 3, 4, 5],
-            weights=[50, 25, 15, 7, 3]
-        )[0]
-        
-        # Generate random timestamp
-        time_delta = random.random() * (end_date - start_date).total_seconds()
-        timestamp = start_date + timedelta(seconds=time_delta)
-        
-        # Calculate revenue
-        revenue = round(product["price"] * quantity, 2)
-        
-        transaction = {
-            "transaction_id": f"TXN{i+1:06d}",
-            "product_id": product["product_id"],
-            "product_name": product["name"],
-            "category": product["category"],
-            "quantity": quantity,
-            "unit_price": product["price"],
-            "revenue": revenue,
-            "timestamp": timestamp.isoformat()
-        }
-        sales.append(transaction)
-    
-    # Sort by timestamp
-    sales.sort(key=lambda x: x["timestamp"])
+        # Move to next day
+        current_date += timedelta(days=1)
     
     return sales

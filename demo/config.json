@@ -1,0 +1,21 @@
+{
+  "SEED": 42,
+  "OUTPUT_DIR": "demo/output",
+  "BASELINE": {
+    "NUM_PRODUCTS": 50,
+    "DATE_START": "2024-11-01",
+    "DATE_END": "2024-11-30",
+    "PRODUCTS_FILE": "products.json",
+    "SALES_FILE": "sales.json"
+  },
+  "ENRICHMENT": {
+    "START_DATE": "2024-11-15",
+    "FRACTION": 0.5,
+    "EFFECT_MODULE": "enrichment_impact_library",
+    "EFFECT_FUNCTION": "quantity_boost",
+    "EFFECT_SIZE": 0.5,
+    "PRODUCTS_FILE": "products_enriched.json",
+    "SALES_FACTUAL_FILE": "sales_factual.json",
+    "SALES_COUNTERFACTUAL_FILE": "sales_counterfactual.json"
+  }
+}
