@@ -37,3 +37,6 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["online_retail_simulator*"]
+
+[tool.setuptools.package-data]
+online_retail_simulator = ["config_defaults.json"]

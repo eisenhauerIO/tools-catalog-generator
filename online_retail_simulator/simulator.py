@@ -7,6 +7,7 @@ from typing import List, Dict, Optional
 from .simulator_product_data import generate_product_data
 from .simulator_product_sales import generate_sales_data
 from .enrichment_application import assign_enrichment, load_effect_function, apply_enrichment_to_sales
+from .config_processor import process_config
 
 
 def generate_products(n_products: int = 100, seed: Optional[int] = None) -> List[Dict]:
@@ -93,16 +94,15 @@ def simulate(config_path: str) -> None:
                           EFFECT_SIZE, PRODUCTS_FILE, SALES_FACTUAL_FILE,
                           SALES_COUNTERFACTUAL_FILE}
     """
-    config_file = Path(config_path)
-    
-    if not config_file.exists():
-        raise FileNotFoundError(f"Configuration file not found: {config_path}")
-    
-    with open(config_file, 'r') as f:
-        config = json.load(f)
+    # Load and process configuration with defaults
+    config = process_config(config_path)
     
     # Check if hierarchical config (with BASELINE section)
-    has_enrichment = "ENRICHMENT" in config
+    # Only enable enrichment if START_DATE is provided
+    has_enrichment = (
+        "ENRICHMENT" in config and 
+        config["ENRICHMENT"].get("START_DATE")
+    )
     
     if "BASELINE" in config:
         # Hierarchical config
