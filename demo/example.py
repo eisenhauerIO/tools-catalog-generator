@@ -14,13 +14,16 @@ def main():
     print("EXAMPLE 1: Rule-Based Generation")
     print("=" * 70)
     print("Generating synthetic product catalog and sales transactions (baseline only).\n")
-    simulate("demo/config_rule.json")
+
+    # Run rule-based simulation and capture output
+    rule_df = simulate("demo/config_rule.json")
 
     print("\n\n" + "=" * 70)
     print("EXAMPLE 2: Synthesizer-Based Generation")
     print("=" * 70)
     print("Sampling synthetic products and sales from SDV-trained models.\n")
-    simulate("demo/config_synthesizer.json")
+    # Pass rule_df as input to synthesizer-based simulation
+    simulate("demo/config_synthesizer.json", df=rule_df)
 
     print("\n" + "=" * 70)
     print("Examples complete")
