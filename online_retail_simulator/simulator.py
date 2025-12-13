@@ -2,11 +2,13 @@
 
 import json
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
+
+import pandas as pd
 
 from .simulator_product_data import generate_product_data
 from .simulator_product_sales import generate_sales_data
-from .enrichment_application import assign_enrichment, load_effect_function, apply_enrichment_to_sales
+from .enrichment_application import assign_enrichment, load_effect_function, apply_enrichment_to_sales, parse_effect_spec
 from .config_processor import process_config
 
 
@@ -71,7 +73,7 @@ def save_to_json(data: List[Dict], filepath: str, indent: int = 2) -> None:
     print(f"Data saved to {filepath}")
 
 
-def simulate(config_path: str) -> None:
+def simulate(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Main entry point: run simulation from JSON configuration file.
     
@@ -81,6 +83,9 @@ def simulate(config_path: str) -> None:
     
     Args:
         config_path: Path to JSON configuration file
+    
+    Returns:
+        Tuple of (products_df, sales_df) as pandas DataFrames
         
     Configuration structure:
         Flat config (baseline only):
@@ -168,9 +173,7 @@ def simulate(config_path: str) -> None:
         
         enrichment_start = enrichment_config.get("START_DATE")
         enrichment_fraction = enrichment_config.get("FRACTION", 0.5)
-        effect_module = enrichment_config.get("EFFECT_MODULE", "enrichment_impact_library")
-        effect_function_name = enrichment_config.get("EFFECT_FUNCTION", "quantity_boost")
-        effect_size = enrichment_config.get("EFFECT_SIZE", 0.5)
+        effect_spec = enrichment_config.get("EFFECT", "quantity_boost:0.5")
         
         enriched_products_file = enrichment_config.get("PRODUCTS_FILE", "products_enriched.json")
         factual_sales_file = enrichment_config.get("SALES_FACTUAL_FILE", "sales_factual.json")
@@ -179,13 +182,16 @@ def simulate(config_path: str) -> None:
         if not enrichment_start:
             raise ValueError("ENRICHMENT configuration must include START_DATE")
         
+        # Parse EFFECT specification
+        effect_module, effect_function_name, effect_params = parse_effect_spec(effect_spec)
+        
         print(f"\n" + "=" * 60)
         print("Applying Enrichment Treatment")
         print("=" * 60)
         print(f"  Start Date:   {enrichment_start}")
         print(f"  Fraction:     {enrichment_fraction:.0%}")
         print(f"  Effect:       {effect_module}.{effect_function_name}")
-        print(f"  Effect Size:  {effect_size:.0%}")
+        print(f"  Params:       {effect_params}")
         
         # Assign enrichment treatment
         print(f"\nAssigning enrichment to {enrichment_fraction:.0%} of products...")
@@ -205,7 +211,7 @@ def simulate(config_path: str) -> None:
             enriched_products,
             enrichment_start,
             effect_function,
-            effect_size
+            **effect_params
         )
         print(f"✓ Created factual sales with {len(factual_sales)} transactions")
         
@@ -256,3 +262,8 @@ def simulate(config_path: str) -> None:
         print(f"Average Order:      ${total_revenue/len(sales):.2f}")
     
     print(f"\n✓ Simulation complete!")
+    
+    # Convert to DataFrames and return
+    products_df = pd.DataFrame(products)
+    sales_df = pd.DataFrame(sales)
+    return products_df, sales_df

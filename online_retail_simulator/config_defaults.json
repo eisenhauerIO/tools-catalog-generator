@@ -8,11 +8,18 @@
   },
   "ENRICHMENT": {
     "FRACTION": 0.5,
-    "EFFECT_MODULE": "enrichment_impact_library",
-    "EFFECT_FUNCTION": "quantity_boost",
-    "EFFECT_SIZE": 0.5,
+    "EFFECT": "quantity_boost:0.5",
     "PRODUCTS_FILE": "products_enriched.json",
     "SALES_FACTUAL_FILE": "sales_factual.json",
     "SALES_COUNTERFACTUAL_FILE": "sales_counterfactual.json"
+  },
+  "SDV": {
+    "INPUT_SALES_SOURCE": "sales.json",
+    "INPUT_PRODUCTS_SOURCE": "products.json",
+    "SYNTHESIZER_TYPE": "gaussian_copula",
+    "MODEL_SALES_FILE": "synthesizer_sales.pkl",
+    "MODEL_PRODUCTS_FILE": "synthesizer_products.pkl",
+    "OUTPUT_PRODUCTS_FILE": "mc_products.json",
+    "OUTPUT_SALES_FILE": "mc_sales.json"
   }
 }

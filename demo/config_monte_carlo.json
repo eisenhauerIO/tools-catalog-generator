@@ -1,0 +1,18 @@
+{
+  "SEED": 42,
+  "OUTPUT_DIR": "demo/output_mc",
+  "BASELINE": {
+    "NUM_PRODUCTS": 30,
+    "DATE_START": "2024-11-01",
+    "DATE_END": "2024-11-15",
+    "PRODUCTS_FILE": "products.json",
+    "SALES_FILE": "sales.json"
+  },
+  "SDV": {
+    "SYNTHESIZER_TYPE": "gaussian_copula",
+    "MODEL_SALES_FILE": "synthesizer_sales.pkl",
+    "MODEL_PRODUCTS_FILE": "synthesizer_products.pkl",
+    "OUTPUT_PRODUCTS_FILE": "mc_sample_001_products.json",
+    "OUTPUT_SALES_FILE": "mc_sample_001_sales.json"
+  }
+}

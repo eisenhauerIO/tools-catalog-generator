@@ -5,7 +5,46 @@ import importlib
 import json
 import copy
 from pathlib import Path
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Union, Tuple, Any
+
+
+def parse_effect_spec(effect_spec: Union[str, Dict]) -> Tuple[str, str, Dict[str, Any]]:
+    """
+    Parse EFFECT specification into module, function, and params.
+    
+    Supports three formats:
+    1. Shorthand string: "quantity_boost:0.5" -> function_name:effect_size
+    2. Dict format: {"function": "combined_boost", "params": {"effect_size": 0.5, "ramp_days": 7}}
+    3. Dict with module: {"module": "my_module", "function": "my_func", "params": {...}}
+    
+    Args:
+        effect_spec: EFFECT specification from config
+    
+    Returns:
+        Tuple of (module_name, function_name, params_dict)
+    """
+    if isinstance(effect_spec, str):
+        # Shorthand format: "function_name:effect_size"
+        if ":" in effect_spec:
+            function_name, effect_size_str = effect_spec.split(":", 1)
+            return "enrichment_impact_library", function_name.strip(), {"effect_size": float(effect_size_str)}
+        else:
+            # Just function name, no params
+            return "enrichment_impact_library", effect_spec.strip(), {}
+    
+    elif isinstance(effect_spec, dict):
+        # Dict format
+        module_name = effect_spec.get("module", "enrichment_impact_library")
+        function_name = effect_spec.get("function")
+        params = effect_spec.get("params", {})
+        
+        if not function_name:
+            raise ValueError("EFFECT dict must include 'function' field")
+        
+        return module_name, function_name, params
+    
+    else:
+        raise ValueError(f"EFFECT must be string or dict, got {type(effect_spec)}")
 
 
 def assign_enrichment(
@@ -67,7 +106,7 @@ def apply_enrichment_to_sales(
     enriched_products: List[Dict],
     enrichment_start: str,
     effect_function: Callable,
-    effect_size: float = 0.5
+    **kwargs
 ) -> List[Dict]:
     """
     Apply enrichment treatment effect to sales data.
@@ -77,7 +116,7 @@ def apply_enrichment_to_sales(
         enriched_products: List of products with 'enriched' field
         enrichment_start: Start date of enrichment (YYYY-MM-DD)
         effect_function: Treatment effect function to apply
-        effect_size: Magnitude of effect (interpretation depends on function)
+        **kwargs: Additional parameters to pass to effect function
     
     Returns:
         List of modified sales with treatment effect applied
@@ -91,11 +130,11 @@ def apply_enrichment_to_sales(
         sale_copy = copy.deepcopy(sale)
         
         if sale_copy['product_id'] in enriched_ids:
-            # Apply treatment effect function
+            # Apply treatment effect function with all params as kwargs
             sale_copy = effect_function(
                 sale_copy,
                 enrichment_start=enrichment_start,
-                effect_size=effect_size
+                **kwargs
             )
         
         treated_sales.append(sale_copy)

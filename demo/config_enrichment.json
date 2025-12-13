@@ -11,9 +11,7 @@
   "ENRICHMENT": {
     "START_DATE": "2024-11-15",
     "FRACTION": 0.5,
-    "EFFECT_MODULE": "enrichment_impact_library",
-    "EFFECT_FUNCTION": "quantity_boost",
-    "EFFECT_SIZE": 0.5,
+    "EFFECT": {"function": "combined_boost", "params": {"effect_size": 0.5, "ramp_days": 7}},
     "PRODUCTS_FILE": "products_enriched.json",
     "SALES_FACTUAL_FILE": "sales_factual.json",
     "SALES_COUNTERFACTUAL_FILE": "sales_counterfactual.json"
