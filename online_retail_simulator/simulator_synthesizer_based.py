@@ -10,51 +10,9 @@ import pandas as pd
 try:
     from sdv.single_table import GaussianCopulaSynthesizer, CTGANSynthesizer, TVAESynthesizer
     from sdv.metadata import SingleTableMetadata
-    SDV_AVAILABLE = True
+    _SDV_AVAILABLE = True
 except ImportError:
-    SDV_AVAILABLE = False
-
-
-def check_sdv_available() -> None:
-    """Check if SDV is installed; raise ImportError if not."""
-    if not SDV_AVAILABLE:
-        raise ImportError(
-            "SDV is required for synthesizer-based simulation. "
-            "Install it with: pip install sdv"
-        )
-
-
-def get_synthesizer_class(synthesizer_type: str):
-    """Get synthesizer class by name."""
-    check_sdv_available()
-    
-    synthesizer_map = {
-        "gaussian_copula": GaussianCopulaSynthesizer,
-        "ctgan": CTGANSynthesizer,
-        "tvae": TVAESynthesizer,
-    }
-    
-    if synthesizer_type not in synthesizer_map:
-        raise ValueError(
-            f"Unknown synthesizer type: {synthesizer_type}. "
-            f"Supported: {list(synthesizer_map.keys())}"
-        )
-    
-    return synthesizer_map[synthesizer_type]
-
-
-def validate_sdv_config(config: dict) -> None:
-    """Validate SDV configuration section."""
-    check_sdv_available()
-    
-    if "SDV" not in config:
-        raise ValueError("Configuration must include 'SDV' section")
-    
-    sdv_config = config["SDV"]
-    required_fields = ["SYNTHESIZER_TYPE", "MODEL_PRODUCTS_FILE", "MODEL_SALES_FILE"]
-    for field in required_fields:
-        if field not in sdv_config:
-            raise ValueError(f"SDV config must include '{field}'")
+    _SDV_AVAILABLE = False
 
 
 def train_synthesizer(
@@ -79,13 +37,13 @@ def train_synthesizer(
     if sales_df is None or not isinstance(sales_df, pd.DataFrame):
         raise TypeError("train_synthesizer requires sales_df as a pandas DataFrame")
     
-    check_sdv_available()
+    _check_sdv_available()
     
     # Load and validate config
     with open(config_path, 'r') as f:
         config = json.load(f)
     
-    validate_sdv_config(config)
+    _validate_sdv_config(config)
     
     sdv_config = config["SDV"]
     synthesizer_type = sdv_config.get("SYNTHESIZER_TYPE", "gaussian_copula")
@@ -104,7 +62,7 @@ def train_synthesizer(
     print(f"Sales Data: {len(sales_df)} rows")
     
     # Get synthesizer class
-    synthesizer_class = get_synthesizer_class(synthesizer_type)
+    synthesizer_class = _get_synthesizer_class(synthesizer_type)
     
     # Train products synthesizer
     print(f"\nTraining {synthesizer_type} on products...")
@@ -153,13 +111,13 @@ def simulate_synthesizer_based(
         ValueError: If row counts cannot be determined
         FileNotFoundError: If trained model files do not exist
     """
-    check_sdv_available()
+    _check_sdv_available()
     
     # Load config
     with open(config_path, 'r') as f:
         config = json.load(f)
     
-    validate_sdv_config(config)
+    _validate_sdv_config(config)
     
     sdv_config = config["SDV"]
     output_dir = config.get("OUTPUT_DIR", "output")
@@ -226,3 +184,49 @@ def simulate_synthesizer_based(
     print("\n✓ Sampling complete!")
     
     return products_df, sales_df
+
+
+# ============================================================================
+# Private Section: Helpers
+# ============================================================================
+
+def _check_sdv_available() -> None:
+    """Check if SDV is installed; raise ImportError if not."""
+    if not _SDV_AVAILABLE:
+        raise ImportError(
+            "SDV is required for synthesizer-based simulation. "
+            "Install it with: pip install sdv"
+        )
+
+
+def _get_synthesizer_class(synthesizer_type: str):
+    """Get synthesizer class by name."""
+    _check_sdv_available()
+    
+    synthesizer_map = {
+        "gaussian_copula": GaussianCopulaSynthesizer,
+        "ctgan": CTGANSynthesizer,
+        "tvae": TVAESynthesizer,
+    }
+    
+    if synthesizer_type not in synthesizer_map:
+        raise ValueError(
+            f"Unknown synthesizer type: {synthesizer_type}. "
+            f"Supported: {list(synthesizer_map.keys())}"
+        )
+    
+    return synthesizer_map[synthesizer_type]
+
+
+def _validate_sdv_config(config: dict) -> None:
+    """Validate SDV configuration section."""
+    _check_sdv_available()
+    
+    if "SDV" not in config:
+        raise ValueError("Configuration must include 'SDV' section")
+    
+    sdv_config = config["SDV"]
+    required_fields = ["SYNTHESIZER_TYPE", "MODEL_PRODUCTS_FILE", "MODEL_SALES_FILE"]
+    for field in required_fields:
+        if field not in sdv_config:
+            raise ValueError(f"SDV config must include '{field}'")

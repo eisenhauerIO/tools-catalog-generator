@@ -8,122 +8,6 @@ from typing import List, Dict, Optional, Tuple
 
 import pandas as pd
 
-# Product generation constants
-CATEGORIES = [
-    "Electronics",
-    "Clothing",
-    "Home & Garden",
-    "Books",
-    "Sports & Outdoors",
-    "Toys & Games",
-    "Food & Beverage",
-    "Health & Beauty"
-]
-
-PRODUCT_NAMES = {
-    "Electronics": ["Laptop", "Smartphone", "Tablet", "Headphones", "Monitor", "Keyboard", "Mouse", "Webcam"],
-    "Clothing": ["T-Shirt", "Jeans", "Jacket", "Sweater", "Dress", "Shorts", "Hoodie", "Socks"],
-    "Home & Garden": ["Chair", "Table", "Lamp", "Rug", "Curtains", "Vase", "Mirror", "Clock"],
-    "Books": ["Novel", "Textbook", "Cookbook", "Biography", "Comic", "Magazine", "Journal", "Guide"],
-    "Sports & Outdoors": ["Ball", "Bike", "Tent", "Backpack", "Yoga Mat", "Weights", "Running Shoes", "Water Bottle"],
-    "Toys & Games": ["Board Game", "Puzzle", "Action Figure", "Doll", "Building Blocks", "Card Game", "Stuffed Animal", "Remote Car"],
-    "Food & Beverage": ["Coffee", "Tea", "Snacks", "Chocolate", "Juice", "Cookies", "Nuts", "Energy Bar"],
-    "Health & Beauty": ["Shampoo", "Lotion", "Soap", "Toothpaste", "Perfume", "Makeup", "Vitamins", "Sunscreen"]
-}
-
-PRICE_RANGES = {
-    "Electronics": (50, 1500),
-    "Clothing": (15, 200),
-    "Home & Garden": (20, 500),
-    "Books": (10, 60),
-    "Sports & Outdoors": (15, 300),
-    "Toys & Games": (10, 100),
-    "Food & Beverage": (5, 50),
-    "Health & Beauty": (8, 80)
-}
-
-
-def generate_product_data(n_products: int = 100, seed: int = None) -> List[Dict]:
-    """
-    Generate synthetic product data.
-    
-    Args:
-        n_products: Number of products to generate (default: 100)
-        seed: Random seed for reproducibility (default: None)
-    
-    Returns:
-        List of product dictionaries with id, name, category, and price
-    """
-    if seed is not None:
-        random.seed(seed)
-    
-    products: List[Dict] = []
-    for i in range(n_products):
-        category = random.choice(CATEGORIES)
-        product_name = random.choice(PRODUCT_NAMES[category])
-        price_min, price_max = PRICE_RANGES[category]
-        price = round(random.uniform(price_min, price_max), 2)
-        products.append({
-            "product_id": f"PROD{i+1:04d}",
-            "name": product_name,
-            "category": category,
-            "price": price
-        })
-    return products
-
-
-def generate_sales_data(
-    products: List[Dict],
-    date_start: str,
-    date_end: str,
-    seed: Optional[int] = None,
-    sale_probability: float = 0.7
-) -> List[Dict]:
-    """
-    Generate synthetic daily sales transactions from product data.
-    
-    Generates one potential transaction per product per day. Each product-day
-    combination has a probability of generating a sale (default 70%).
-    
-    Args:
-        products: List of product dictionaries
-        date_start: Start date in "YYYY-MM-DD" format
-        date_end: End date in "YYYY-MM-DD" format
-        seed: Random seed for reproducibility (default: None)
-        sale_probability: Probability of a sale for each product-day (default: 0.7)
-    
-    Returns:
-        List of sales transaction dictionaries
-    """
-    if seed is not None:
-        random.seed(seed)
-    
-    start_date = datetime.strptime(date_start, "%Y-%m-%d")
-    end_date = datetime.strptime(date_end, "%Y-%m-%d")
-    
-    sales: List[Dict] = []
-    transaction_counter = 0
-    current_date = start_date
-    while current_date <= end_date:
-        for product in products:
-            if random.random() < sale_probability:
-                transaction_counter += 1
-                quantity = random.choices([1, 2, 3, 4, 5], weights=[50, 25, 15, 7, 3])[0]
-                revenue = round(product["price"] * quantity, 2)
-                sales.append({
-                    "transaction_id": f"TXN{transaction_counter:06d}",
-                    "product_id": product["product_id"],
-                    "product_name": product["name"],
-                    "category": product["category"],
-                    "quantity": quantity,
-                    "unit_price": product["price"],
-                    "revenue": revenue,
-                    "date": current_date.strftime("%Y-%m-%d")
-                })
-        current_date += timedelta(days=1)
-    
-    return sales
-
 
 def simulate_rule_based(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -154,14 +38,6 @@ def simulate_rule_based(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # Lazy import to avoid circular dependencies
     from .enrichment_application import assign_enrichment, load_effect_function, apply_enrichment_to_sales, parse_effect_spec
     from .config_processor import process_config
-    
-    def save_to_json(data: List[Dict], filepath: str, indent: int = 2) -> None:
-        """Save data to JSON file."""
-        output_path = Path(filepath)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w') as f:
-            json.dump(data, f, indent=indent)
-        print(f"Data saved to {filepath}")
     
     # Load and process configuration with defaults
     config = process_config(config_path)
@@ -228,8 +104,8 @@ def simulate_rule_based(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     products_path = f"{output_dir}/{products_file}"
     sales_path = f"{output_dir}/{sales_file}"
     
-    save_to_json(products, products_path)
-    save_to_json(sales, sales_path)
+    _save_to_json(products, products_path)
+    _save_to_json(sales, sales_path)
     
     # Apply enrichment if configured
     if has_enrichment:
@@ -288,9 +164,9 @@ def simulate_rule_based(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
         factual_sales_path = f"{output_dir}/{factual_sales_file}"
         counterfactual_sales_path = f"{output_dir}/{counterfactual_sales_file}"
         
-        save_to_json(enriched_products, enriched_products_path)
-        save_to_json(factual_sales, factual_sales_path)
-        save_to_json(counterfactual_sales, counterfactual_sales_path)
+        _save_to_json(enriched_products, enriched_products_path)
+        _save_to_json(factual_sales, factual_sales_path)
+        _save_to_json(counterfactual_sales, counterfactual_sales_path)
         
         # Display enrichment summary
         print(f"\n" + "=" * 60)
@@ -331,3 +207,132 @@ def simulate_rule_based(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     products_df = pd.DataFrame(products)
     sales_df = pd.DataFrame(sales)
     return products_df, sales_df
+
+
+def generate_product_data(n_products: int = 100, seed: int = None) -> List[Dict]:
+    """
+    Generate synthetic product data.
+    
+    Args:
+        n_products: Number of products to generate (default: 100)
+        seed: Random seed for reproducibility (default: None)
+    
+    Returns:
+        List of product dictionaries with id, name, category, and price
+    """
+    if seed is not None:
+        random.seed(seed)
+    
+    products: List[Dict] = []
+    for i in range(n_products):
+        category = random.choice(_CATEGORIES)
+        product_name = random.choice(_PRODUCT_NAMES[category])
+        price_min, price_max = _PRICE_RANGES[category]
+        price = round(random.uniform(price_min, price_max), 2)
+        products.append({
+            "product_id": f"PROD{i+1:04d}",
+            "name": product_name,
+            "category": category,
+            "price": price
+        })
+    return products
+
+
+def generate_sales_data(
+    products: List[Dict],
+    date_start: str,
+    date_end: str,
+    seed: Optional[int] = None,
+    sale_probability: float = 0.7
+) -> List[Dict]:
+    """
+    Generate synthetic daily sales transactions from product data.
+    
+    Generates one potential transaction per product per day. Each product-day
+    combination has a probability of generating a sale (default 70%).
+    
+    Args:
+        products: List of product dictionaries
+        date_start: Start date in "YYYY-MM-DD" format
+        date_end: End date in "YYYY-MM-DD" format
+        seed: Random seed for reproducibility (default: None)
+        sale_probability: Probability of a sale for each product-day (default: 0.7)
+    
+    Returns:
+        List of sales transaction dictionaries
+    """
+    if seed is not None:
+        random.seed(seed)
+    
+    start_date = datetime.strptime(date_start, "%Y-%m-%d")
+    end_date = datetime.strptime(date_end, "%Y-%m-%d")
+    
+    sales: List[Dict] = []
+    transaction_counter = 0
+    current_date = start_date
+    while current_date <= end_date:
+        for product in products:
+            if random.random() < sale_probability:
+                transaction_counter += 1
+                quantity = random.choices([1, 2, 3, 4, 5], weights=[50, 25, 15, 7, 3])[0]
+                revenue = round(product["price"] * quantity, 2)
+                sales.append({
+                    "transaction_id": f"TXN{transaction_counter:06d}",
+                    "product_id": product["product_id"],
+                    "product_name": product["name"],
+                    "category": product["category"],
+                    "quantity": quantity,
+                    "unit_price": product["price"],
+                    "revenue": revenue,
+                    "date": current_date.strftime("%Y-%m-%d")
+                })
+        current_date += timedelta(days=1)
+    
+    return sales
+
+
+# ============================================================================
+# Private Section: Constants and Helpers
+# ============================================================================
+
+_CATEGORIES = [
+    "Electronics",
+    "Clothing",
+    "Home & Garden",
+    "Books",
+    "Sports & Outdoors",
+    "Toys & Games",
+    "Food & Beverage",
+    "Health & Beauty"
+]
+
+_PRODUCT_NAMES = {
+    "Electronics": ["Laptop", "Smartphone", "Tablet", "Headphones", "Monitor", "Keyboard", "Mouse", "Webcam"],
+    "Clothing": ["T-Shirt", "Jeans", "Jacket", "Sweater", "Dress", "Shorts", "Hoodie", "Socks"],
+    "Home & Garden": ["Chair", "Table", "Lamp", "Rug", "Curtains", "Vase", "Mirror", "Clock"],
+    "Books": ["Novel", "Textbook", "Cookbook", "Biography", "Comic", "Magazine", "Journal", "Guide"],
+    "Sports & Outdoors": ["Ball", "Bike", "Tent", "Backpack", "Yoga Mat", "Weights", "Running Shoes", "Water Bottle"],
+    "Toys & Games": ["Board Game", "Puzzle", "Action Figure", "Doll", "Building Blocks", "Card Game", "Stuffed Animal", "Remote Car"],
+    "Food & Beverage": ["Coffee", "Tea", "Snacks", "Chocolate", "Juice", "Cookies", "Nuts", "Energy Bar"],
+    "Health & Beauty": ["Shampoo", "Lotion", "Soap", "Toothpaste", "Perfume", "Makeup", "Vitamins", "Sunscreen"]
+}
+
+_PRICE_RANGES = {
+    "Electronics": (50, 1500),
+    "Clothing": (15, 200),
+    "Home & Garden": (20, 500),
+    "Books": (10, 60),
+    "Sports & Outdoors": (15, 300),
+    "Toys & Games": (10, 100),
+    "Food & Beverage": (5, 50),
+    "Health & Beauty": (8, 80)
+}
+
+
+def _save_to_json(data: List[Dict], filepath: str, indent: int = 2) -> None:
+    """Save data to JSON file."""
+    output_path = Path(filepath)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, 'w') as f:
+        json.dump(data, f, indent=indent)
+    print(f"Data saved to {filepath}")

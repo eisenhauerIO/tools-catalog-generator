@@ -8,9 +8,9 @@ import shutil
 
 from online_retail_simulator import simulate, train_synthesizer, simulate_synthesizer_based
 from online_retail_simulator.simulator_synthesizer_based import (
-    check_sdv_available,
-    validate_sdv_config,
-    SDV_AVAILABLE,
+    _check_sdv_available,
+    _validate_sdv_config,
+    _SDV_AVAILABLE,
 )
 
 
@@ -57,13 +57,13 @@ class TestSDVAvailability:
     
     def test_sdv_check(self):
         """Test that SDV availability check works."""
-        if SDV_AVAILABLE:
+        if _SDV_AVAILABLE:
             # Should not raise if SDV is available
-            check_sdv_available()
+            _check_sdv_available()
         else:
             # Should raise ImportError if SDV not available
             with pytest.raises(ImportError, match="SDV dependencies not available"):
-                check_sdv_available()
+                _check_sdv_available()
 
 
 class TestConfigValidation:
@@ -75,24 +75,24 @@ class TestConfigValidation:
             config = json.load(f)
         
         # Should not raise
-        validate_sdv_config(config)
+        _validate_sdv_config(config)
     
     def test_validate_sdv_config_missing_section(self):
         """Test validation fails when SDV section is missing."""
         config = {"BASELINE": {}}
         
         with pytest.raises(ValueError, match="Configuration must include 'SDV' section"):
-            validate_sdv_config(config)
+            _validate_sdv_config(config)
     
     def test_validate_sdv_config_missing_fields(self):
         """Test validation fails when required fields are missing."""
         config = {"SDV": {}}
         
         with pytest.raises(ValueError, match="SDV config must include"):
-            validate_sdv_config(config)
+            _validate_sdv_config(config)
 
 
-@pytest.mark.skipif(not SDV_AVAILABLE, reason="SDV dependencies not installed")
+@pytest.mark.skipif(not _SDV_AVAILABLE, reason="SDV dependencies not installed")
 class TestMonteCarloWorkflow:
     """Test full Monte Carlo sampling workflow."""
     
@@ -221,7 +221,7 @@ class TestMonteCarloWorkflow:
         assert len(sample_files) == 6  # 3 products + 3 sales files
 
 
-@pytest.mark.skipif(not SDV_AVAILABLE, reason="SDV dependencies not installed")
+@pytest.mark.skipif(not _SDV_AVAILABLE, reason="SDV dependencies not installed")
 class TestSynthesizerTypes:
     """Test different synthesizer types."""
     
