@@ -13,12 +13,14 @@ All steps must be run inside a freshly pruned [hatch](https://hatch.pypa.io/) en
      ```
    - This removes all existing environments and ensures a clean start.
 
-2. **Check for Uncommitted Changes**
+
+2. **Check for Uncommitted or Untracked Files**
    - Run:
      ```bash
      git status --porcelain
      ```
-   - If any files are listed (output is not empty), STOP. Ask the user how to proceed (commit, stash, or discard changes).
+   - If any files are listed (output is not empty), STOP. This means there are either uncommitted changes or files not under version control (untracked files).
+   - Ask the user how to proceed (commit, stash, discard changes, or add untracked files to version control).
 
 3. **Run the Full Test Suite in Hatch**
    - Run:
