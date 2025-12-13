@@ -27,5 +27,6 @@ def simulate(config_path: str, mode: str | None = None, **kwargs) -> Tuple[pd.Da
         return simulate_rule_based(config_path, config=config)
     if sim_mode == "synthesizer":
         from .simulator_synthesizer_based import simulate_synthesizer_based
-        return simulate_synthesizer_based(config_path, config=config, **kwargs)
+        # Expect df, num_rows, synthesizer_type in kwargs
+        return simulate_synthesizer_based(**kwargs)
     raise ValueError("mode must be 'rule' or 'synthesizer'")

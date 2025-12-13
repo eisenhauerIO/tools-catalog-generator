@@ -95,74 +95,21 @@ class TestMonteCarloWorkflow:
     """Test full Monte Carlo sampling workflow."""
     
     def test_full_workflow(self, monte_carlo_config, temp_output_dir):
-        """Test complete workflow: simulate -> train -> generate."""
-        # Step 1: Generate baseline data
+        """Test complete workflow: simulate -> synthesize."""
+        # Step 1: Generate baseline data and merge
         products_df, sales_df = simulate(monte_carlo_config, mode="rule")
-        
-        # Check baseline files exist
-        products_file = Path(temp_output_dir) / "mc_products.json"
-        sales_file = Path(temp_output_dir) / "mc_sales.json"
-        assert products_file.exists()
-        assert sales_file.exists()
-        
-        # Load and verify baseline data
-        with open(products_file, 'r') as f:
-            products = json.load(f)
-        with open(sales_file, 'r') as f:
-            sales = json.load(f)
-        
-        assert len(products) == 10
-        assert len(sales) > 0
-        
-        # Verify DataFrames were returned
-        assert len(products_df) == 10
-        assert len(sales_df) == len(sales)
-        
-        # Step 2: Train synthesizers with returned DataFrames
-        train_synthesizer(monte_carlo_config, products_df=products_df, sales_df=sales_df)
-        
-        # Check model files exist
-        model_products = Path(temp_output_dir) / "mc_model_products.pkl"
-        model_sales = Path(temp_output_dir) / "mc_model_sales.pkl"
-        assert model_products.exists()
-        assert model_sales.exists()
-        
-        # Step 3: Generate Monte Carlo sample
-        synthetic_products_df, synthetic_sales_df = simulate_synthesizer_based(
-            monte_carlo_config,
-            num_rows_products=len(products_df),
-            num_rows_sales=len(sales_df)
-        )
-        
-        # Check output files exist
-        mc_products = Path(temp_output_dir) / "mc_mc_products.json"
-        mc_sales = Path(temp_output_dir) / "mc_mc_sales.json"
-        assert mc_products.exists()
-        assert mc_sales.exists()
-        
-        # Load and verify synthetic data
-        with open(mc_products, 'r') as f:
-            synthetic_products = json.load(f)
-        with open(mc_sales, 'r') as f:
-            synthetic_sales = json.load(f)
-        
-        # Check same size as training data
-        assert len(synthetic_products) == len(products)
-        assert len(synthetic_sales) == len(sales)
-        
-        # Verify returned DataFrames match files
-        assert len(synthetic_products_df) == len(synthetic_products)
-        assert len(synthetic_sales_df) == len(synthetic_sales)
-        
-        # Check data structure
-        assert "product_id" in synthetic_products[0]
-        assert "category" in synthetic_products[0]
-        assert "price" in synthetic_products[0]
-        
-        assert "transaction_id" in synthetic_sales[0]
-        assert "product_id" in synthetic_sales[0]
-        assert "quantity" in synthetic_sales[0]
-        assert "revenue" in synthetic_sales[0]
+        merged_df = sales_df.merge(products_df, on="product_id", how="left")
+        assert len(merged_df) == len(sales_df)
+
+        # Step 2: Generate synthetic sample from merged data
+        from online_retail_simulator.simulator_synthesizer_based import simulate_synthesizer_based
+        synthetic_df = simulate_synthesizer_based(merged_df, num_rows=len(merged_df))
+        assert isinstance(synthetic_df, type(merged_df))
+        assert len(synthetic_df) == len(merged_df)
+        # Check some expected columns
+        expected_cols = ["product_id", "date", "quantity", "revenue", "name", "category", "price"]
+        for col in expected_cols:
+            assert col in synthetic_df.columns
     
     def test_train_without_data(self, monte_carlo_config, temp_output_dir):
         """Test that training fails if DataFrames are not provided."""
@@ -170,52 +117,18 @@ class TestMonteCarloWorkflow:
             # Missing required positional DataFrame args
             train_synthesizer(monte_carlo_config)  # type: ignore
     
-    def test_generate_without_models(self, monte_carlo_config, temp_output_dir):
-        """Test that generation fails if models don't exist."""
-        # Generate baseline data but don't train
-        products_df, sales_df = simulate(monte_carlo_config, mode="rule")
-        
-        with pytest.raises(FileNotFoundError, match="Products model not found"):
-            simulate_synthesizer_based(monte_carlo_config, num_rows_products=10, num_rows_sales=10)
     
     def test_multiple_samples(self, monte_carlo_config, temp_output_dir):
-        """Test generating multiple Monte Carlo samples."""
-        # Generate baseline and train
+        """Test generating multiple Monte Carlo samples with new interface."""
         products_df, sales_df = simulate(monte_carlo_config, mode="rule")
-        train_synthesizer(monte_carlo_config, products_df=products_df, sales_df=sales_df)
-        
-        # Load config to modify output files
-        with open(monte_carlo_config, 'r') as f:
-            config = json.load(f)
-        
-        # Generate 3 samples with different output names
-        for i in range(1, 4):
-            config["OUTPUT"]["file_prefix"] = f"mc_sample_{i:03d}"
-            
-            # Write updated config
-            with open(monte_carlo_config, 'w') as f:
-                json.dump(config, f, indent=2)
-            
-            # Generate sample
-            synthetic_products_df, synthetic_sales_df = simulate_synthesizer_based(
-                monte_carlo_config,
-                num_rows_products=len(products_df),
-                num_rows_sales=len(sales_df)
-            )
-            
-            # Verify files exist
-            mc_products = Path(temp_output_dir) / f"mc_sample_{i:03d}_mc_products.json"
-            mc_sales = Path(temp_output_dir) / f"mc_sample_{i:03d}_mc_sales.json"
-            assert mc_products.exists()
-            assert mc_sales.exists()
-            
-            # Verify DataFrames are returned
-            assert len(synthetic_products_df) > 0
-            assert len(synthetic_sales_df) > 0
-        
-        # Verify all 3 samples exist
-        sample_files = list(Path(temp_output_dir).glob("mc_sample_*"))
-        assert len(sample_files) == 6  # 3 products + 3 sales files
+        merged_df = sales_df.merge(products_df, on="product_id", how="left")
+        from online_retail_simulator.simulator_synthesizer_based import simulate_synthesizer_based
+        samples = []
+        for i in range(3):
+            synthetic_df = simulate_synthesizer_based(merged_df, num_rows=len(merged_df))
+            assert isinstance(synthetic_df, type(merged_df))
+            assert len(synthetic_df) == len(merged_df)
+            samples.append(synthetic_df)
 
 
 @pytest.mark.skipif(not _SDV_AVAILABLE, reason="SDV dependencies not installed")
@@ -223,40 +136,23 @@ class TestSynthesizerTypes:
     """Test different synthesizer types."""
     
     def test_gaussian_copula(self, monte_carlo_config, temp_output_dir):
-        """Test Gaussian Copula synthesizer."""
+        """Test Gaussian Copula synthesizer (new interface)."""
         products_df, sales_df = simulate(monte_carlo_config, mode="rule")
-        train_synthesizer(monte_carlo_config, products_df=products_df, sales_df=sales_df)
-        synthetic_products_df, synthetic_sales_df = simulate_synthesizer_based(
-            monte_carlo_config,
-            num_rows_products=len(products_df),
-            num_rows_sales=len(sales_df)
-        )
-        
-        mc_products = Path(temp_output_dir) / "mc_mc_products.json"
-        assert mc_products.exists()
-        assert len(synthetic_products_df) > 0
+        merged_df = sales_df.merge(products_df, on="product_id", how="left")
+        from online_retail_simulator.simulator_synthesizer_based import simulate_synthesizer_based
+        synthetic_df = simulate_synthesizer_based(merged_df, num_rows=len(merged_df), synthesizer_type="gaussian_copula")
+        assert isinstance(synthetic_df, type(merged_df))
+        assert len(synthetic_df) == len(merged_df)
     
     @pytest.mark.slow
     def test_ctgan(self, monte_carlo_config, temp_output_dir):
-        """Test CTGAN synthesizer (slower, neural network)."""
-        # Update config to use CTGAN
-        with open(monte_carlo_config, 'r') as f:
-            config = json.load(f)
-        config["SYNTHESIZER"]["SYNTHESIZER_TYPE"] = "ctgan"
-        with open(monte_carlo_config, 'w') as f:
-            json.dump(config, f, indent=2)
-        
+        """Test CTGAN synthesizer (new interface, slower, neural network)."""
         products_df, sales_df = simulate(monte_carlo_config, mode="rule")
-        train_synthesizer(monte_carlo_config, products_df=products_df, sales_df=sales_df)
-        synthetic_products_df, synthetic_sales_df = simulate_synthesizer_based(
-            monte_carlo_config,
-            num_rows_products=len(products_df),
-            num_rows_sales=len(sales_df)
-        )
-        
-        mc_products = Path(temp_output_dir) / "mc_products.json"
-        assert mc_products.exists()
-        assert len(synthetic_products_df) > 0
+        merged_df = sales_df.merge(products_df, on="product_id", how="left")
+        from online_retail_simulator.simulator_synthesizer_based import simulate_synthesizer_based
+        synthetic_df = simulate_synthesizer_based(merged_df, num_rows=len(merged_df), synthesizer_type="ctgan")
+        assert isinstance(synthetic_df, type(merged_df))
+        assert len(synthetic_df) == len(merged_df)
     
     def test_invalid_synthesizer(self, monte_carlo_config, temp_output_dir):
         """Test that invalid synthesizer type raises error."""

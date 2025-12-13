@@ -92,99 +92,47 @@ def train_synthesizer(
 
 
 def simulate_synthesizer_based(
-    config_path: str,
-    num_rows_products: Optional[int] = None,
-    num_rows_sales: Optional[int] = None,
-    config: Optional[Dict] = None
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    df: pd.DataFrame,
+    num_rows: int,
+    synthesizer_type: str = "gaussian_copula"
+) -> pd.DataFrame:
     """
-    Generate synthetic data using trained SDV synthesizers.
-    
+    Generate synthetic data using an SDV synthesizer trained on a single DataFrame.
+
     Args:
-        config_path: Path to JSON configuration file
-        num_rows_products: Number of synthetic products to generate
-                          (uses DEFAULT_PRODUCTS_ROWS from config if not provided)
-        num_rows_sales: Number of synthetic sales to generate
-                       (uses DEFAULT_SALES_ROWS from config if not provided)
-    
+        df: Input DataFrame (already merged with all required info)
+        num_rows: Number of synthetic rows to generate
+        synthesizer_type: Type of SDV synthesizer ("gaussian_copula", "ctgan", "tvae")
+
     Returns:
-        Tuple of (products_df, sales_df) as pandas DataFrames
-    
+        Synthetic DataFrame of shape (num_rows, df.shape[1])
+
     Raises:
-        ValueError: If row counts cannot be determined
-        FileNotFoundError: If trained model files do not exist
+        ValueError: If num_rows is not positive
     """
     _check_sdv_available()
-    
-    # Load config
-    if config is None:
-        with open(config_path, 'r') as f:
-            config = json.load(f)
-    
-    _validate_sdv_config(config)
-    
-    syn_config = config["SYNTHESIZER"]
-    output_dir = Path(config.get("OUTPUT", {}).get("dir", config.get("OUTPUT_DIR", "output")))
-    prefix = config.get("OUTPUT", {}).get("file_prefix", "run")
-    products_model_file = f"{prefix}_model_products.pkl"
-    sales_model_file = f"{prefix}_model_sales.pkl"
-    products_output_file = f"{prefix}_mc_products.json"
-    sales_output_file = f"{prefix}_mc_sales.json"
-    
-    # Determine row counts
-    if num_rows_products is None:
-        num_rows_products = syn_config.get("DEFAULT_PRODUCTS_ROWS")
-    if num_rows_sales is None:
-        num_rows_sales = syn_config.get("DEFAULT_SALES_ROWS")
-    
-    if num_rows_products is None or num_rows_sales is None:
-        raise ValueError(
-            "Row counts must be provided as arguments or in config as "
-            "DEFAULT_PRODUCTS_ROWS and DEFAULT_SALES_ROWS"
-        )
-    
-    # Check model files exist
-    products_model_path, sales_model_path, _model_prefix = _resolve_model_paths(
-        output_dir, prefix, products_model_file, sales_model_file
-    )
-    
-    # Load models
-    with open(products_model_path, 'rb') as f:
-        products_synthesizer = pickle.load(f)
-    with open(sales_model_path, 'rb') as f:
-        sales_synthesizer = pickle.load(f)
-    
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Input must be a pandas DataFrame")
+    if not isinstance(num_rows, int) or num_rows <= 0:
+        raise ValueError("num_rows must be a positive integer")
+
     print("=" * 60)
-    print("Generating Synthetic Data")
+    print("Training SDV Synthesizer (single-table)")
     print("=" * 60)
-    print(f"Products: {num_rows_products} rows")
-    print(f"Sales: {num_rows_sales} rows")
-    
-    # Generate synthetic data
-    print("\nGenerating synthetic products...")
-    products_df = products_synthesizer.sample(num_rows=num_rows_products)
-    print(f"✓ Generated {len(products_df)} products")
-    
-    print("Generating synthetic sales...")
-    sales_df = sales_synthesizer.sample(num_rows=num_rows_sales)
-    print(f"✓ Generated {len(sales_df)} sales")
-    
-    # Save synthetic data to JSON
-    print(f"\nSaving synthetic data to {output_dir}/...")
-    products_output_path = f"{output_dir}/{products_output_file}"
-    sales_output_path = f"{output_dir}/{sales_output_file}"
-    
-    with open(products_output_path, 'w') as f:
-        json.dump(products_df.to_dict(orient='records'), f, indent=2, default=str)
-    print(f"Data saved to {products_output_path}")
-    
-    with open(sales_output_path, 'w') as f:
-        json.dump(sales_df.to_dict(orient='records'), f, indent=2, default=str)
-    print(f"Data saved to {sales_output_path}")
-    
+    print(f"Synthesizer Type: {synthesizer_type}")
+    print(f"Input Data: {len(df)} rows, {df.shape[1]} columns")
+
+    synthesizer_class = _get_synthesizer_class(synthesizer_type)
+    metadata = SingleTableMetadata()
+    metadata.detect_from_dataframe(df)
+    synthesizer = synthesizer_class(metadata=metadata)
+    synthesizer.fit(df)
+
+    print(f"\nGenerating {num_rows} synthetic rows...")
+    synthetic_df = synthesizer.sample(num_rows=num_rows)
+    print(f"✓ Generated {len(synthetic_df)} synthetic rows")
     print("\n✓ Sampling complete!")
-    
-    return products_df, sales_df
+    return synthetic_df
 
 
 # ============================================================================
