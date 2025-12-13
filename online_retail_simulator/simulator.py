@@ -6,8 +6,8 @@ from typing import List, Dict, Optional, Tuple
 
 import pandas as pd
 
-from .simulator_product_data import generate_product_data
-from .simulator_product_sales import generate_sales_data
+from .simulator_rule_based import generate_product_data
+from .simulator_rule_based import generate_sales_data
 from .enrichment_application import assign_enrichment, load_effect_function, apply_enrichment_to_sales, parse_effect_spec
 from .config_processor import process_config
 
@@ -73,7 +73,7 @@ def save_to_json(data: List[Dict], filepath: str, indent: int = 2) -> None:
     print(f"Data saved to {filepath}")
 
 
-def simulate(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def simulate_rule_based(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Main entry point: run simulation from JSON configuration file.
     
@@ -267,3 +267,25 @@ def simulate(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     products_df = pd.DataFrame(products)
     sales_df = pd.DataFrame(sales)
     return products_df, sales_df
+
+
+def simulate(config_path: str, mode: str = "rule_based", **kwargs) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Unified simulation entrypoint.
+    
+    Args:
+        config_path: Path to JSON configuration file
+        mode: "rule_based" or "synthesizer_based"
+        **kwargs: forwarded to synthesizer-based simulation (e.g., num_rows_products, num_rows_sales)
+    
+    Returns:
+        Tuple of (products_df, sales_df) as pandas DataFrames
+    """
+    if mode == "rule_based":
+        return simulate_rule_based(config_path)
+    elif mode == "synthesizer_based":
+        # Lazy import to avoid SDV dependency when not used
+        from .simulator_synthesizer_based import simulate_synthesizer_based
+        return simulate_synthesizer_based(config_path, **kwargs)
+    else:
+        raise ValueError("mode must be 'rule_based' or 'synthesizer_based'")

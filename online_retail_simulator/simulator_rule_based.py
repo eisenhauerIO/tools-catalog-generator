@@ -1,9 +1,10 @@
-"""Generate synthetic product data."""
+"""Rule-based product and sales generators combined in one module."""
 
 import random
-from typing import List, Dict
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional
 
-
+# Product generation constants
 CATEGORIES = [
     "Electronics",
     "Clothing",
@@ -52,20 +53,69 @@ def generate_product_data(n_products: int = 100, seed: int = None) -> List[Dict]
     if seed is not None:
         random.seed(seed)
     
-    products = []
-    
+    products: List[Dict] = []
     for i in range(n_products):
         category = random.choice(CATEGORIES)
         product_name = random.choice(PRODUCT_NAMES[category])
         price_min, price_max = PRICE_RANGES[category]
         price = round(random.uniform(price_min, price_max), 2)
-        
-        product = {
+        products.append({
             "product_id": f"PROD{i+1:04d}",
             "name": product_name,
             "category": category,
             "price": price
-        }
-        products.append(product)
-    
+        })
     return products
+
+
+def generate_sales_data(
+    products: List[Dict],
+    date_start: str,
+    date_end: str,
+    seed: Optional[int] = None,
+    sale_probability: float = 0.7
+) -> List[Dict]:
+    """
+    Generate synthetic daily sales transactions from product data.
+    
+    Generates one potential transaction per product per day. Each product-day
+    combination has a probability of generating a sale (default 70%).
+    
+    Args:
+        products: List of product dictionaries
+        date_start: Start date in "YYYY-MM-DD" format
+        date_end: End date in "YYYY-MM-DD" format
+        seed: Random seed for reproducibility (default: None)
+        sale_probability: Probability of a sale for each product-day (default: 0.7)
+    
+    Returns:
+        List of sales transaction dictionaries
+    """
+    if seed is not None:
+        random.seed(seed)
+    
+    start_date = datetime.strptime(date_start, "%Y-%m-%d")
+    end_date = datetime.strptime(date_end, "%Y-%m-%d")
+    
+    sales: List[Dict] = []
+    transaction_counter = 0
+    current_date = start_date
+    while current_date <= end_date:
+        for product in products:
+            if random.random() < sale_probability:
+                transaction_counter += 1
+                quantity = random.choices([1, 2, 3, 4, 5], weights=[50, 25, 15, 7, 3])[0]
+                revenue = round(product["price"] * quantity, 2)
+                sales.append({
+                    "transaction_id": f"TXN{transaction_counter:06d}",
+                    "product_id": product["product_id"],
+                    "product_name": product["name"],
+                    "category": product["category"],
+                    "quantity": quantity,
+                    "unit_price": product["price"],
+                    "revenue": revenue,
+                    "date": current_date.strftime("%Y-%m-%d")
+                })
+        current_date += timedelta(days=1)
+    
+    return sales

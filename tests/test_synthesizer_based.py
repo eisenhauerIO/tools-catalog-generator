@@ -6,11 +6,10 @@ from pathlib import Path
 import tempfile
 import shutil
 
-from online_retail_simulator import simulate, train_synthesizer, generate_sample
-from online_retail_simulator.monte_carlo_sampler import (
+from online_retail_simulator import simulate, train_synthesizer, simulate_synthesizer_based
+from online_retail_simulator.simulator_synthesizer_based import (
     check_sdv_available,
     validate_sdv_config,
-    validate_sdv_config_for_generation,
     SDV_AVAILABLE,
 )
 
@@ -82,14 +81,14 @@ class TestConfigValidation:
         """Test validation fails when SDV section is missing."""
         config = {"BASELINE": {}}
         
-        with pytest.raises(ValueError, match="Configuration must include SDV section"):
+        with pytest.raises(ValueError, match="Configuration must include 'SDV' section"):
             validate_sdv_config(config)
     
     def test_validate_sdv_config_missing_fields(self):
         """Test validation fails when required fields are missing."""
         config = {"SDV": {}}
         
-        with pytest.raises(ValueError, match="SDV.MODEL_PRODUCTS_FILE is required"):
+        with pytest.raises(ValueError, match="SDV config must include"):
             validate_sdv_config(config)
 
 
@@ -100,7 +99,7 @@ class TestMonteCarloWorkflow:
     def test_full_workflow(self, monte_carlo_config, temp_output_dir):
         """Test complete workflow: simulate -> train -> generate."""
         # Step 1: Generate baseline data
-        products_df, sales_df = simulate(monte_carlo_config)
+        products_df, sales_df = simulate(monte_carlo_config, mode="rule_based")
         
         # Check baseline files exist
         products_file = Path(temp_output_dir) / "products.json"
@@ -131,7 +130,11 @@ class TestMonteCarloWorkflow:
         assert model_sales.exists()
         
         # Step 3: Generate Monte Carlo sample
-        synthetic_products_df, synthetic_sales_df = generate_sample(monte_carlo_config)
+        synthetic_products_df, synthetic_sales_df = simulate_synthesizer_based(
+            monte_carlo_config,
+            num_rows_products=len(products_df),
+            num_rows_sales=len(sales_df)
+        )
         
         # Check output files exist
         mc_products = Path(temp_output_dir) / "mc_products.json"
@@ -165,21 +168,22 @@ class TestMonteCarloWorkflow:
     
     def test_train_without_data(self, monte_carlo_config, temp_output_dir):
         """Test that training fails if DataFrames are not provided."""
-        with pytest.raises(ValueError, match="products_df and sales_df must be provided"):
-            train_synthesizer(monte_carlo_config)
+        with pytest.raises(TypeError):
+            # Missing required positional DataFrame args
+            train_synthesizer(monte_carlo_config)  # type: ignore
     
     def test_generate_without_models(self, monte_carlo_config, temp_output_dir):
         """Test that generation fails if models don't exist."""
         # Generate baseline data but don't train
-        products_df, sales_df = simulate(monte_carlo_config)
+        products_df, sales_df = simulate(monte_carlo_config, mode="rule_based")
         
         with pytest.raises(FileNotFoundError, match="Products model not found"):
-            generate_sample(monte_carlo_config)
+            simulate_synthesizer_based(monte_carlo_config, num_rows_products=10, num_rows_sales=10)
     
     def test_multiple_samples(self, monte_carlo_config, temp_output_dir):
         """Test generating multiple Monte Carlo samples."""
         # Generate baseline and train
-        products_df, sales_df = simulate(monte_carlo_config)
+        products_df, sales_df = simulate(monte_carlo_config, mode="rule_based")
         train_synthesizer(monte_carlo_config, products_df=products_df, sales_df=sales_df)
         
         # Load config to modify output files
@@ -196,7 +200,11 @@ class TestMonteCarloWorkflow:
                 json.dump(config, f, indent=2)
             
             # Generate sample
-            synthetic_products_df, synthetic_sales_df = generate_sample(monte_carlo_config)
+            synthetic_products_df, synthetic_sales_df = simulate_synthesizer_based(
+                monte_carlo_config,
+                num_rows_products=len(products_df),
+                num_rows_sales=len(sales_df)
+            )
             
             # Verify files exist
             mc_products = Path(temp_output_dir) / f"mc_sample_{i:03d}_products.json"
@@ -221,7 +229,11 @@ class TestSynthesizerTypes:
         """Test Gaussian Copula synthesizer."""
         products_df, sales_df = simulate(monte_carlo_config)
         train_synthesizer(monte_carlo_config, products_df=products_df, sales_df=sales_df)
-        synthetic_products_df, synthetic_sales_df = generate_sample(monte_carlo_config)
+        synthetic_products_df, synthetic_sales_df = simulate_synthesizer_based(
+            monte_carlo_config,
+            num_rows_products=len(products_df),
+            num_rows_sales=len(sales_df)
+        )
         
         mc_products = Path(temp_output_dir) / "mc_products.json"
         assert mc_products.exists()
@@ -239,7 +251,11 @@ class TestSynthesizerTypes:
         
         products_df, sales_df = simulate(monte_carlo_config)
         train_synthesizer(monte_carlo_config, products_df=products_df, sales_df=sales_df)
-        synthetic_products_df, synthetic_sales_df = generate_sample(monte_carlo_config)
+        synthetic_products_df, synthetic_sales_df = simulate_synthesizer_based(
+            monte_carlo_config,
+            num_rows_products=len(products_df),
+            num_rows_sales=len(sales_df)
+        )
         
         mc_products = Path(temp_output_dir) / "mc_products.json"
         assert mc_products.exists()
