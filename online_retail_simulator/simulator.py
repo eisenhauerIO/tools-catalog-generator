@@ -6,53 +6,9 @@ from typing import List, Dict, Optional, Tuple
 
 import pandas as pd
 
-from .simulator_rule_based import generate_product_data
-from .simulator_rule_based import generate_sales_data
+from .simulator_rule_based import generate_product_data, generate_sales_data
 from .enrichment_application import assign_enrichment, load_effect_function, apply_enrichment_to_sales, parse_effect_spec
 from .config_processor import process_config
-
-
-def generate_products(n_products: int = 100, seed: Optional[int] = None) -> List[Dict]:
-    """
-    Generate synthetic product catalog.
-    
-    Args:
-        n_products: Number of products to generate (default: 100)
-        seed: Random seed for reproducibility (default: None)
-    
-    Returns:
-        List of product dictionaries
-    """
-    return generate_product_data(n_products=n_products, seed=seed)
-
-
-def generate_sales(
-    products: List[Dict],
-    date_start: str,
-    date_end: str,
-    seed: Optional[int] = None,
-    sale_probability: float = 0.7
-) -> List[Dict]:
-    """
-    Generate synthetic sales transactions from products.
-    
-    Args:
-        products: List of product dictionaries
-        date_start: Start date in "YYYY-MM-DD" format
-        date_end: End date in "YYYY-MM-DD" format
-        seed: Random seed for reproducibility (default: None)
-        sale_probability: Probability of sale per product per day (default: 0.7)
-    
-    Returns:
-        List of sales transaction dictionaries
-    """
-    return generate_sales_data(
-        products=products,
-        date_start=date_start,
-        date_end=date_end,
-        seed=seed,
-        sale_probability=sale_probability
-    )
 
 
 def save_to_json(data: List[Dict], filepath: str, indent: int = 2) -> None:
@@ -146,12 +102,12 @@ def simulate_rule_based(config_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     
     # Generate baseline products
     print(f"\nGenerating {num_products} products...")
-    products = generate_products(n_products=num_products, seed=seed)
+    products = generate_product_data(n_products=num_products, seed=seed)
     print(f"✓ Generated {len(products)} products")
     
     # Generate baseline sales
     print(f"\nGenerating baseline sales transactions...")
-    sales = generate_sales(
+    sales = generate_sales_data(
         products=products,
         date_start=date_start,
         date_end=date_end,

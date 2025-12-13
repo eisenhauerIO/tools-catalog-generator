@@ -4,7 +4,7 @@ import pytest
 import json
 import tempfile
 from pathlib import Path
-from online_retail_simulator import generate_products, generate_sales, simulate
+from online_retail_simulator import generate_product_data, generate_sales_data, simulate
 from online_retail_simulator.config_processor import load_defaults, deep_merge, validate_config, process_config
 from online_retail_simulator.enrichment_application import assign_enrichment, parse_effect_spec, load_effect_function, apply_enrichment_to_sales
 
@@ -14,12 +14,12 @@ class TestProductGeneration:
     
     def test_generate_products_count(self):
         """Test that correct number of products are generated."""
-        products = generate_products(n_products=10, seed=42)
+        products = generate_product_data(n_products=10, seed=42)
         assert len(products) == 10
     
     def test_generate_products_structure(self):
         """Test product dictionary structure."""
-        products = generate_products(n_products=5, seed=42)
+        products = generate_product_data(n_products=5, seed=42)
         for product in products:
             assert "product_id" in product
             assert "name" in product
@@ -30,13 +30,13 @@ class TestProductGeneration:
     
     def test_generate_products_reproducible(self):
         """Test that same seed produces same products."""
-        products1 = generate_products(n_products=10, seed=42)
-        products2 = generate_products(n_products=10, seed=42)
+        products1 = generate_product_data(n_products=10, seed=42)
+        products2 = generate_product_data(n_products=10, seed=42)
         assert products1 == products2
     
     def test_generate_products_categories(self):
         """Test that products have valid categories."""
-        products = generate_products(n_products=50, seed=42)
+        products = generate_product_data(n_products=50, seed=42)
         categories = {p["category"] for p in products}
         valid_categories = {
             "Electronics", "Clothing", "Home & Garden", "Books",
@@ -50,8 +50,8 @@ class TestSalesGeneration:
     
     def test_generate_sales_basic(self):
         """Test basic sales generation."""
-        products = generate_products(n_products=5, seed=42)
-        sales = generate_sales(
+        products = generate_product_data(n_products=5, seed=42)
+        sales = generate_sales_data(
             products=products,
             date_start="2024-01-01",
             date_end="2024-01-07",
@@ -65,8 +65,8 @@ class TestSalesGeneration:
     
     def test_generate_sales_date_range(self):
         """Test sales are within specified date range."""
-        products = generate_products(n_products=5, seed=42)
-        sales = generate_sales(
+        products = generate_product_data(n_products=5, seed=42)
+        sales = generate_sales_data(
             products=products,
             date_start="2024-01-01",
             date_end="2024-01-07",
@@ -77,14 +77,14 @@ class TestSalesGeneration:
     
     def test_generate_sales_reproducible(self):
         """Test that same seed produces same sales."""
-        products = generate_products(n_products=5, seed=42)
-        sales1 = generate_sales(
+        products = generate_product_data(n_products=5, seed=42)
+        sales1 = generate_sales_data(
             products=products,
             date_start="2024-01-01",
             date_end="2024-01-07",
             seed=42
         )
-        sales2 = generate_sales(
+        sales2 = generate_sales_data(
             products=products,
             date_start="2024-01-01",
             date_end="2024-01-07",
@@ -98,7 +98,7 @@ class TestEnrichmentAssignment:
     
     def test_assign_enrichment_fraction(self):
         """Test correct fraction of products are enriched."""
-        products = generate_products(n_products=100, seed=42)
+        products = generate_product_data(n_products=100, seed=42)
         enriched = assign_enrichment(products, fraction=0.5, seed=42)
         
         enriched_count = sum(1 for p in enriched if p.get("enriched", False))
@@ -106,7 +106,7 @@ class TestEnrichmentAssignment:
     
     def test_assign_enrichment_reproducible(self):
         """Test enrichment assignment is reproducible."""
-        products = generate_products(n_products=20, seed=42)
+        products = generate_product_data(n_products=20, seed=42)
         enriched1 = assign_enrichment(products, fraction=0.5, seed=42)
         enriched2 = assign_enrichment(products, fraction=0.5, seed=42)
         
@@ -210,10 +210,10 @@ class TestEffectFunctions:
     
     def test_apply_enrichment_with_params(self):
         """Test apply_enrichment_to_sales passes kwargs correctly."""
-        products = generate_products(n_products=5, seed=42)
+        products = generate_product_data(n_products=5, seed=42)
         enriched_products = assign_enrichment(products, fraction=0.5, seed=42)
         
-        sales = generate_sales(
+        sales = generate_sales_data(
             products=products,
             date_start="2024-01-01",
             date_end="2024-01-20",

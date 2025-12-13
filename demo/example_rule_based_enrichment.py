@@ -5,11 +5,11 @@ from online_retail_simulator import simulate_rule_based
 
 def main():
     # Use the enrichment demo config if available; otherwise config_basic
-    config_path = "demo/config_enrichment.json"
+    config_path = "config_enrichment.json"
     try:
         products_df, sales_df = simulate_rule_based(config_path)
     except FileNotFoundError:
-        config_path = "demo/config_basic.json"
+        config_path = "config_basic.json"
         products_df, sales_df = simulate_rule_based(config_path)
 
     print("\nDemo finished. DataFrames returned:")
