@@ -36,6 +36,9 @@ dev = [
     "black>=22.0",
     "flake8>=4.0",
 ]
+notebooks = [
+     "nbconvert"
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
