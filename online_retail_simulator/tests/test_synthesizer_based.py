@@ -48,42 +48,32 @@ def monte_carlo_config(temp_output_dir, mode="synthesizer"):
     return str(config_path)
 
 
+@pytest.mark.skipif(not has_synthesizer(), reason="SDV dependencies not installed")
 class TestSDVAvailability:
     """Test SDV dependency availability."""
-    
     def test_sdv_check(self):
         """Test that SDV availability check works."""
         if _SDV_AVAILABLE:
-            # Should not raise if SDV is available
             _check_sdv_available()
         else:
-            # Should raise ImportError if SDV not available
-            with pytest.raises(ImportError, match="SDV dependencies not available"):
+            with pytest.raises(ImportError, match="SDV is required for synthesizer-based simulation. Install it with: pip install sdv"):
                 _check_sdv_available()
 
 
+@pytest.mark.skipif(not has_synthesizer(), reason="SDV dependencies not installed")
 class TestConfigValidation:
     """Test configuration validation for SDV."""
-    
     def test_validate_sdv_config_valid(self, temp_output_dir):
-        """Test validation passes for valid SDV config."""
         config_path = monte_carlo_config(temp_output_dir)
         with open(config_path, 'r') as f:
             config = json.load(f)
-        # Should not raise
         _validate_sdv_config(config)
-    
     def test_validate_sdv_config_missing_section(self):
-        """Test validation fails when SDV section is missing."""
         config = {"BASELINE": {}}
-        
         with pytest.raises(ValueError, match="Configuration must include 'SYNTHESIZER' section"):
             _validate_sdv_config(config)
-    
     def test_validate_sdv_config_missing_fields(self):
-        """Test validation fails when required fields are missing."""
         config = {"SYNTHESIZER": {}}
-        
         with pytest.raises(ValueError, match="SYNTHESIZER config must include"):
             _validate_sdv_config(config)
 
