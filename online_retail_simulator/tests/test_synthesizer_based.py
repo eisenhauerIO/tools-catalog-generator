@@ -1,3 +1,9 @@
+
+import pytest
+from .import_helpers import has_synthesizer
+
+pytestmark = pytest.mark.skipif(not has_synthesizer(), reason="SDV dependencies not installed")
+
 """Tests for Monte Carlo sampling with SDV."""
 
 import json
@@ -133,7 +139,6 @@ class TestSynthesizerTypes:
         assert isinstance(synthetic_df, type(merged_df))
         assert len(synthetic_df) == len(merged_df)
     
-    @pytest.mark.slow
     def test_ctgan(self, temp_output_dir):
         """Test CTGAN synthesizer (new interface, slower, neural network)."""
         rule_config = monte_carlo_config(temp_output_dir, mode="rule")
