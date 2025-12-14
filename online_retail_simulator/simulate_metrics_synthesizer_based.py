@@ -5,13 +5,12 @@ No error handling, hard failures only.
 """
 import pandas as pd
 
-try:
-    from sdv.single_table import GaussianCopulaSynthesizer, CTGANSynthesizer, TVAESynthesizer
-    from sdv.metadata import SingleTableMetadata
-except ImportError:
-    pass
+    try:
+        from sdv.single_table import GaussianCopulaSynthesizer, CTGANSynthesizer, TVAESynthesizer
+        from sdv.metadata import SingleTableMetadata
+    except ImportError:
+        raise ImportError("SDV is required for synthesizer-based simulation. Please install SDV to use this feature.")
 
-def simulate_metrics_synthesizer_based(product_characteristics: pd.DataFrame, config_path: str) -> pd.DataFrame:
     # For demonstration, just generate random sales metrics for each product and date
     import numpy as np
     import json
