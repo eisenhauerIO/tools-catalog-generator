@@ -1,0 +1,8 @@
+# Example config using custom price discount effect
+IMPACT:
+  FUNCTION: "price_discount"
+  PARAMS:
+    discount_percent: 0.25  # 25% discount
+    enrichment_fraction: 0.4  # 40% of products get discount
+    enrichment_start: "2024-11-15"
+    seed: 42

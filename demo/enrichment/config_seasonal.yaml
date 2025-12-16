@@ -1,0 +1,8 @@
+# Example config using seasonal multiplier effect
+IMPACT:
+  FUNCTION: "seasonal_multiplier"
+  PARAMS:
+    peak_months: [11, 12]  # November and December
+    peak_multiplier: 1.8  # 80% boost during peak months
+    enrichment_fraction: 0.6  # 60% of products affected
+    seed: 999

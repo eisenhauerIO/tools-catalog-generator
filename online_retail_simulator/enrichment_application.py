@@ -2,11 +2,15 @@
 
 import copy
 import importlib
+import inspect
 import json
 import random
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import pandas as pd
+
+# Global registry for enrichment functions
+_ENRICHMENT_REGISTRY = {}
 
 
 def parse_impact_spec(impact_spec: Dict) -> Tuple[str, str, Dict[str, Any]]:
@@ -66,9 +70,69 @@ def assign_enrichment(products: List[Dict], fraction: float, seed: int = None) -
     return enriched_products
 
 
+def register_enrichment_function(name: str, func: Callable) -> None:
+    """
+    Register an enrichment function by name.
+
+    Args:
+        name: Name to register the function under
+        func: Function that takes (sales: list, **kwargs) -> list
+
+    Raises:
+        ValueError: If function signature is invalid
+    """
+    # Validate function signature
+    sig = inspect.signature(func)
+    if "sales" not in sig.parameters:
+        raise ValueError(f"Function {func.__name__} must have 'sales' parameter")
+
+    # Store in registry
+    _ENRICHMENT_REGISTRY[name] = func
+
+
+def register_enrichment_module(module_name: str) -> None:
+    """
+    Register all functions from a module that match enrichment signature.
+
+    Args:
+        module_name: Name of module to import and register functions from
+
+    Raises:
+        ImportError: If module cannot be imported
+    """
+    # Try to import from online_retail_simulator package first
+    try:
+        module = importlib.import_module(f"online_retail_simulator.{module_name}")
+    except (ImportError, ModuleNotFoundError):
+        # Fall back to importing as standalone module
+        module = importlib.import_module(module_name)
+
+    # Register all functions that have the right signature
+    for name in dir(module):
+        obj = getattr(module, name)
+        if callable(obj) and not name.startswith("_"):
+            try:
+                sig = inspect.signature(obj)
+                if "sales" in sig.parameters:
+                    _ENRICHMENT_REGISTRY[name] = obj
+            except (ValueError, TypeError):
+                # Skip objects that don't have valid signatures
+                continue
+
+
+def list_enrichment_functions() -> List[str]:
+    """
+    List all registered enrichment function names.
+
+    Returns:
+        List of registered function names
+    """
+    return list(_ENRICHMENT_REGISTRY.keys())
+
+
 def load_effect_function(module_name: str, function_name: str) -> Callable:
     """
-    Load treatment effect function from module.
+    Load treatment effect function from registry or module.
 
     Args:
         module_name: Name of module (e.g., 'enrichment_impact_library' or 'my_custom_effects')
@@ -77,7 +141,11 @@ def load_effect_function(module_name: str, function_name: str) -> Callable:
     Returns:
         Treatment effect function
     """
-    # Try to import from online_retail_simulator package first
+    # Check registry first
+    if function_name in _ENRICHMENT_REGISTRY:
+        return _ENRICHMENT_REGISTRY[function_name]
+
+    # Fall back to current module loading logic
     try:
         module = importlib.import_module(f"online_retail_simulator.{module_name}")
     except (ImportError, ModuleNotFoundError):
