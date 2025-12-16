@@ -10,5 +10,5 @@ def test_characteristics_rule():
     df = simulate_characteristics(config_path)
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
-    assert "product_id" in df.columns
+    assert "asin" in df.columns
     assert "price" in df.columns

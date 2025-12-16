@@ -4,7 +4,20 @@ Reads a DataFrame from the path specified in config['SYNTHESIZER']['dataframe_pa
 No error handling, hard failures only.
 """
 
+import random
+import string
+
 import pandas as pd
+
+
+def generate_random_asin(prefix: str = "B") -> str:
+    """Generate a random ASIN-like identifier.
+    - 10 characters total
+    - Alphanumeric
+    - Defaults to starting with 'B' (common for non-book ASINs)
+    """
+    chars = string.ascii_uppercase + string.digits
+    return prefix + "".join(random.choice(chars) for _ in range(9))
 
 
 def simulate_characteristics_synthesizer_based(config):
@@ -30,8 +43,7 @@ def simulate_characteristics_synthesizer_based(config):
     for i in range(num_rows):
         products.append(
             {
-                "product_id": f"PROD{i:04d}",
-                "name": f"Product {i}",
+                "asin": generate_random_asin(),
                 "category": np.random.choice(categories),
                 "price": np.random.uniform(10, 1000),
             }

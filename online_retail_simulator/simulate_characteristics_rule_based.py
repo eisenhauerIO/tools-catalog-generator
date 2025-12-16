@@ -3,9 +3,21 @@ Rule-based product characteristics simulation.
 """
 
 import random
+import string
 from typing import Dict, List, Optional
 
 import pandas as pd
+
+
+def generate_random_asin(prefix: str = "B") -> str:
+    """Generate a random ASIN-like identifier.
+    - 10 characters total
+    - Alphanumeric
+    - Defaults to starting with 'B' (common for non-book ASINs)
+    """
+    chars = string.ascii_uppercase + string.digits
+    return prefix + "".join(random.choice(chars) for _ in range(9))
+
 
 # ...existing code...
 _CATEGORIES = [
@@ -18,89 +30,6 @@ _CATEGORIES = [
     "Food & Beverage",
     "Health & Beauty",
 ]
-
-_PRODUCT_NAMES = {
-    "Electronics": [
-        "Laptop",
-        "Smartphone",
-        "Tablet",
-        "Headphones",
-        "Monitor",
-        "Keyboard",
-        "Mouse",
-        "Webcam",
-    ],
-    "Clothing": [
-        "T-Shirt",
-        "Jeans",
-        "Jacket",
-        "Sweater",
-        "Dress",
-        "Shorts",
-        "Hoodie",
-        "Socks",
-    ],
-    "Home & Garden": [
-        "Chair",
-        "Table",
-        "Lamp",
-        "Rug",
-        "Curtains",
-        "Vase",
-        "Mirror",
-        "Clock",
-    ],
-    "Books": [
-        "Novel",
-        "Textbook",
-        "Cookbook",
-        "Biography",
-        "Comic",
-        "Magazine",
-        "Journal",
-        "Guide",
-    ],
-    "Sports & Outdoors": [
-        "Ball",
-        "Bike",
-        "Tent",
-        "Backpack",
-        "Yoga Mat",
-        "Weights",
-        "Running Shoes",
-        "Water Bottle",
-    ],
-    "Toys & Games": [
-        "Board Game",
-        "Puzzle",
-        "Action Figure",
-        "Doll",
-        "Building Blocks",
-        "Card Game",
-        "Stuffed Animal",
-        "Remote Car",
-    ],
-    "Food & Beverage": [
-        "Coffee",
-        "Tea",
-        "Snacks",
-        "Chocolate",
-        "Juice",
-        "Cookies",
-        "Nuts",
-        "Energy Bar",
-    ],
-    "Health & Beauty": [
-        "Shampoo",
-        "Lotion",
-        "Soap",
-        "Toothpaste",
-        "Perfume",
-        "Makeup",
-        "Vitamins",
-        "Sunscreen",
-    ],
-}
 
 _PRICE_RANGES = {
     "Electronics": (50, 1500),
@@ -135,13 +64,11 @@ def simulate_characteristics_rule_based(config_path: str, config: Optional[Dict]
     products: List[Dict] = []
     for i in range(num_products):
         category = random.choice(_CATEGORIES)
-        product_name = random.choice(_PRODUCT_NAMES[category])
         price_min, price_max = _PRICE_RANGES[category]
         price = round(random.uniform(price_min, price_max), 2)
         products.append(
             {
-                "product_id": f"PROD{i+1:04d}",
-                "name": product_name,
+                "asin": generate_random_asin(),
                 "category": category,
                 "price": price,
             }

@@ -1,50 +1,45 @@
 # Online Retail Simulator
 
-A lightweight Python package for simulating realistic retail data for experimentation and causal inference in e-commerce contexts.
-
-## Overview
-
-The Online Retail Simulator generates synthetic product catalogs and daily sales transactions with reproducible random seeds. Perfect for testing, demos, and teaching data science concepts without exposing real business data.
-
-## Installation
-
-For development:
-
-```bash
-pip install -e ".[dev]"
-```
+Generate synthetic retail data for testing, demos, and experimentation without exposing real business data.
 
 ## Quick Start
 
-The simplest way to use the simulator is with a YAML configuration file:
+### 1. Install
+```bash
+# Basic installation
+pip install -e .
 
+# With ML-based generation (optional)
+pip install -e ".[synthesizer]"
+
+# For development
+pip install -e ".[dev]"
+```
+
+### 2. Run Demo
+```bash
+python demo/example.py
+```
+
+### 3. Use in Code
 ```python
 from online_retail_simulator import simulate
 
-simulate("config.yaml")
+# Generate data using config file
+sales_df = simulate("demo/config_rule.yaml")
+print(f"Generated {len(sales_df)} sales records")
 ```
 
-### Configuration (prefix-based)
+## Configuration
 
-Each config chooses a simulator mode and shares common baseline settings and an output prefix.
-
-Required keys:
-- `SIMULATOR.mode`: `"rule"` or `"synthesizer"`
-- `OUTPUT.dir`: where files are written
-- `OUTPUT.file_prefix`: base name for generated files
-- `BASELINE`: `DATE_START`, `DATE_END`, `NUM_PRODUCTS`, `SALE_PROB`
-
-Rule-based example (baseline only):
+Create a YAML config file:
 
 ```yaml
-SIMULATOR:
-  mode: rule
-
 SEED: 42
 
 OUTPUT:
-  dir: demo/output
-  file_prefix: rb_demo
+  DIR: output
+  FILE_PREFIX: my_data
 
 RULE:
   NUM_PRODUCTS: 50
@@ -53,23 +48,14 @@ RULE:
   SALE_PROB: 0.7
 ```
 
-Synthesizer example:
+For ML-based generation:
 
 ```yaml
-SIMULATOR:
-  mode: synthesizer
-
 SEED: 42
 
 OUTPUT:
-  dir: demo/output_mc
-  file_prefix: sdv_demo
-
-RULE:
-  NUM_PRODUCTS: 30
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-15"
-  SALE_PROB: 0.7
+  DIR: output
+  FILE_PREFIX: my_data
 
 SYNTHESIZER:
   SYNTHESIZER_TYPE: gaussian_copula
@@ -77,81 +63,105 @@ SYNTHESIZER:
   DEFAULT_SALES_ROWS: 5000
 ```
 
-Derived filenames (under `OUTPUT.dir`):
-- Rule: `<prefix>_products.json`, `<prefix>_sales.json` (enrichment, if configured under `RULE.ENRICHMENT`: `<prefix>_enriched.json`, `<prefix>_factual.json`, `<prefix>_counterfactual.json`).
-- Synthesizer: `<prefix>_model_products.pkl`, `<prefix>_model_sales.pkl`, `<prefix>_mc_products.json`, `<prefix>_mc_sales.json`.
-
-### Programmatic Usage
-
-You can also use the individual functions directly:
+## Programmatic Usage
 
 ```python
-from online_retail_simulator import generate_products, generate_sales, save_to_json
+from online_retail_simulator import simulate
 
-# Generate product catalog with seed for reproducibility
-products = generate_products(n_products=50, seed=42)
+# One-step generation (recommended)
+sales_df = simulate("config.yaml")
 
-# Generate daily sales transactions over date range
-sales = generate_sales(
-    products=products,
-    date_start="2024-11-01",
-    date_end="2024-11-30",
-    seed=42
-)
+# Or step-by-step
+from online_retail_simulator import simulate_characteristics, simulate_metrics
 
-# Export to JSON
-save_to_json(products, "products.json")
-save_to_json(sales, "sales.json")
+products_df = simulate_characteristics("config.yaml")
+sales_df = simulate_metrics(products_df, "config.yaml")
+```
+## Enrichment (Treatment Effects)
+
+Apply treatment effects to simulate catalog enrichment experiments. Effects are applied to:
+- **Selected products only**: A fraction of products receive enrichment (default 50%)
+- **Date-based**: Effects only apply to sales on/after the enrichment start date
+- **Targeted impact**: Only sales of enriched products are modified
+
+```yaml
+SEED: 42
+
+OUTPUT:
+  DIR: output
+  FILE_PREFIX: enriched_data
+
+SYNTHESIZER:
+  SYNTHESIZER_TYPE: gaussian_copula
+  DEFAULT_PRODUCTS_ROWS: 30
+  DEFAULT_SALES_ROWS: 5000
+
+# Apply quantity boost effect
+EFFECT: "quantity_boost:0.5"
+
+# Optional: Control enrichment parameters
+ENRICHMENT_FRACTION: 0.3  # 30% of products get enriched
+ENRICHMENT_START: "2024-11-15"  # Effects start from this date
 ```
 
-## Demo
+### Available Effects
 
-Run the example script to see the simulator in action:
+- `quantity_boost:0.5` - Increase quantity sold by 50%
+- `probability_boost:0.3` - Increase sale probability by 30%
+- `combined_boost` - Gradual ramp-up effect with custom parameters
 
-```bash
-python demo/example.py
+### Custom Effect Parameters
+
+```yaml
+EFFECT:
+  function: "combined_boost"
+  params:
+    effect_size: 0.5
+    ramp_days: 7
 ```
 
-This generates sample product and sales data based on `demo/config_rule.yaml`, saving them to `demo/output/products.json` and `demo/output/sales.json`.
+### Programmatic Enrichment
+
+```python
+from online_retail_simulator.enrichment_application import enrich
+
+# Apply enrichment to existing sales data
+enriched_df = enrich("enrichment_config.yaml", sales_df)
+```
 
 ## Features
 
-- **Simple product generation**: Creates products with ID, name, category, and price across 8 categories
-- **Realistic daily sales data**: Generates transactions with dates, quantities, and revenue
-- **Stochastic sales patterns**: Not every product sells every day (70% probability by default)
-- **Reproducible**: Use seed parameter for deterministic output
-- **JSON export**: Easy data export for use in other tools
-- **Config-driven**: Single entry point with YAML configuration
+- **Two modes**: Rule-based (simple) or ML-based (requires SDV)
+- **Treatment effects**: Simulate catalog enrichment experiments
+- **Reproducible**: Seed-controlled random generation
+- **Realistic data**: 8 product categories, daily sales patterns
+- **DataFrame output**: Returns pandas DataFrames
+- **Python 3.8+**: Broad compatibility
 
 ## Data Structure
 
-### Products
-```json
+### Products DataFrame
+```python
+# Columns: asin, category, price
 {
-  "product_id": "PROD0001",
-  "name": "Laptop",
+  "asin": "BRPOIG8F1C",
   "category": "Electronics",
   "price": 899.99
 }
 ```
 
-### Sales
-```json
+### Sales DataFrame
+```python
+# Columns: asin, category, price, date, quantity, revenue
 {
-  "transaction_id": "TXN000001",
-  "product_id": "PROD0023",
-  "product_name": "Smartphone",
+  "asin": "BRPOIG8F1C",
   "category": "Electronics",
+  "price": 899.99,
+  "date": "2024-11-15",
   "quantity": 2,
-  "unit_price": 599.99,
-  "revenue": 1199.98,
-  "date": "2024-11-15"
+  "revenue": 1799.98
 }
 ```
-
-## Requirements
-
-- Python 3.8+
 
 ## License
 

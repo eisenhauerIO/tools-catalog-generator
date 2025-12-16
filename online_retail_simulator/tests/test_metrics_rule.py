@@ -12,7 +12,7 @@ def test_metrics_rule():
     df = simulate_metrics(products, config_path)
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
-    assert "product_id" in df.columns
+    assert "asin" in df.columns
     assert "date" in df.columns
     assert "quantity" in df.columns
     assert "revenue" in df.columns

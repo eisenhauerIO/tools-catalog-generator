@@ -31,7 +31,7 @@ def simulate_metrics_synthesizer_based(product_characteristics, config_path):
             revenue = price * quantity
             rows.append(
                 {
-                    "product_id": row["product_id"],
+                    "asin": row["asin"],
                     "date": date,
                     "quantity": quantity,
                     "revenue": revenue,
