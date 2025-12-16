@@ -25,15 +25,20 @@ def simulate_metrics(
     from .config_processor import process_config
 
     config_loaded = process_config(config_path) if config is None else config
-    simulator_mode = config_loaded["SIMULATOR"]["mode"]
-    # Use simulator_mode to select backend
-    if simulator_mode == "rule":
+
+    # Detect mode based on which block is present
+    has_rule = "RULE" in config_loaded
+    has_synthesizer = "SYNTHESIZER" in config_loaded
+
+    if has_rule and not has_synthesizer:
         from .simulate_metrics_rule_based import simulate_metrics_rule_based
 
         return simulate_metrics_rule_based(product_characteristics, config_path)
-    elif simulator_mode == "synthesizer":
+    elif has_synthesizer and not has_rule:
         from .simulate_metrics_synthesizer_based import simulate_metrics_synthesizer_based
 
         return simulate_metrics_synthesizer_based(product_characteristics, config_path)
+    elif has_rule and has_synthesizer:
+        raise ValueError("Config must contain exactly one of RULE or SYNTHESIZER block, not both")
     else:
-        raise ValueError(f"Unknown metrics simulator mode: {simulator_mode}")
+        raise ValueError("Config must contain either RULE or SYNTHESIZER block")

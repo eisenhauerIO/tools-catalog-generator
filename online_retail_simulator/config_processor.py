@@ -5,12 +5,14 @@ import json
 from pathlib import Path
 from typing import Any, Dict
 
+import yaml
+
 
 def load_defaults() -> Dict[str, Any]:
     """Load default configuration from package."""
-    defaults_path = Path(__file__).parent / "config_defaults.json"
+    defaults_path = Path(__file__).parent / "config_defaults.yaml"
     with open(defaults_path, "r") as f:
-        return json.load(f)
+        return yaml.safe_load(f)
 
 
 def deep_merge(base: Dict, override: Dict) -> Dict:
@@ -47,25 +49,20 @@ def _require(config: Dict[str, Any], path: str, message: str) -> None:
 def validate_config(config: Dict[str, Any]) -> None:
     """Validate configuration has required fields for the selected simulator."""
 
-    _require(config, "RULE", "Configuration must include RULE section")
-    # If you want to require DATE_START/DATE_END, add them to RULE
-    # _require(config, "RULE.DATE_START", "RULE.DATE_START is required")
-    # _require(config, "RULE.DATE_END", "RULE.DATE_END is required")
-
     _require(config, "OUTPUT.dir", "Configuration must include OUTPUT.dir")
     _require(config, "OUTPUT.file_prefix", "Configuration must include OUTPUT.file_prefix")
 
-    simulator = config.get("SIMULATOR", {})
-    mode = simulator.get("mode")
-    if mode not in {"rule", "synthesizer"}:
-        raise ValueError("SIMULATOR.mode must be 'rule' or 'synthesizer'")
+    # Validate that exactly one of RULE or SYNTHESIZER is present
+    has_rule = "RULE" in config
+    has_synthesizer = "SYNTHESIZER" in config
 
-    if mode == "rule":
-        if "RULE" not in config:
-            raise ValueError("RULE section is required when SIMULATOR.mode='rule'")
-    if mode == "synthesizer":
-        if "SYNTHESIZER" not in config:
-            raise ValueError("SYNTHESIZER section is required when SIMULATOR.mode='synthesizer'")
+    if has_rule and has_synthesizer:
+        raise ValueError("Config must contain exactly one of RULE or SYNTHESIZER block, not both")
+    elif not has_rule and not has_synthesizer:
+        raise ValueError("Config must contain either RULE or SYNTHESIZER block")
+
+    # Validate SYNTHESIZER-specific requirements
+    if has_synthesizer:
         syn = config["SYNTHESIZER"]
         _require(
             {"SYNTHESIZER": syn},
@@ -93,12 +90,23 @@ def process_config(config_path: str) -> Dict[str, Any]:
     if not config_file.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-    # Load user config
+    # Load user config - support both YAML and JSON for backward compatibility
     with open(config_file, "r") as f:
-        user_config = json.load(f)
+        if config_file.suffix.lower() in [".yaml", ".yml"]:
+            user_config = yaml.safe_load(f)
+        else:
+            user_config = json.load(f)
 
     # Load defaults
     defaults = load_defaults()
+
+    # Remove conflicting blocks from defaults based on user config
+    if "SYNTHESIZER" in user_config and "RULE" in defaults:
+        defaults = copy.deepcopy(defaults)
+        del defaults["RULE"]
+    elif "RULE" in user_config and "SYNTHESIZER" in defaults:
+        defaults = copy.deepcopy(defaults)
+        del defaults["SYNTHESIZER"]
 
     # Merge user config over defaults
     config = deep_merge(defaults, user_config)

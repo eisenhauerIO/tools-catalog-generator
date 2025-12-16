@@ -1,0 +1,11 @@
+SEED: 42
+
+OUTPUT:
+  dir: output
+  file_prefix: test
+
+RULE:
+  NUM_PRODUCTS: 10
+  DATE_START: "2024-01-01"
+  DATE_END: "2024-01-05"
+  SALE_PROB: 0.7

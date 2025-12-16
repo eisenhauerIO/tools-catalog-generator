@@ -11,7 +11,7 @@ pytestmark = pytest.mark.skipif(not has_synthesizer(), reason="SDV dependencies 
 def test_characteristics_synthesizer():
     import os
 
-    config_path = os.path.join(os.path.dirname(__file__), "config_synthesizer.json")
+    config_path = os.path.join(os.path.dirname(__file__), "config_synthesizer.yaml")
     df = simulate_characteristics(config_path)
     assert isinstance(df, pd.DataFrame)
     assert not df.empty

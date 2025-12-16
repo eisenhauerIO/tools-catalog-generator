@@ -16,7 +16,7 @@ def main():
     print("Generating synthetic product catalog and sales transactions (rule-based).\n")
 
     # Run rule-based simulation
-    rule_df = simulate("demo/config_rule.json")
+    rule_df = simulate("demo/config_rule.yaml")
     print(f"✓ Generated {len(rule_df)} sales records using rule-based simulation")
     print("✓ Files saved to demo/output/")
 
@@ -27,7 +27,7 @@ def main():
 
     try:
         # Try synthesizer-based simulation
-        synth_df = simulate("demo/config_synthesizer.json")
+        synth_df = simulate("demo/config_synthesizer.yaml")
         print(f"✓ Generated {len(synth_df)} sales records using synthesizer-based simulation")
         print("✓ Files saved to demo/output_mc/")
     except ImportError as e:

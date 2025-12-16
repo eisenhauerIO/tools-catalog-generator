@@ -1,0 +1,13 @@
+SEED: 42
+
+OUTPUT:
+  dir: output
+  file_prefix: test
+
+SYNTHESIZER:
+  SYNTHESIZER_TYPE: gaussian_copula
+  DEFAULT_PRODUCTS_ROWS: 10
+  DEFAULT_SALES_ROWS: 100
+  dataframe_path: online_retail_simulator/tests/df_start.pkl
+
+EFFECT: "quantity_boost:0.5"

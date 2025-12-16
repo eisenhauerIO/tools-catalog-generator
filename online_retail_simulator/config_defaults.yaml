@@ -1,0 +1,9 @@
+SEED: 42
+
+OUTPUT:
+  dir: output
+  file_prefix: run
+
+RULE:
+  NUM_PRODUCTS: 100
+  SALE_PROB: 0.7

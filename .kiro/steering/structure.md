@@ -8,7 +8,7 @@
 ## Core Package (`online_retail_simulator/`)
 - `__init__.py` - Package entry point, exports main functions
 - `simulate.py` - Main workflow orchestrator
-- `config_defaults.json` - Default configuration values
+- `config_defaults.yaml` - Default configuration values
 - `config_processor.py` - Configuration handling utilities
 
 ### Simulation Modules
@@ -25,14 +25,14 @@
 
 ## Testing (`online_retail_simulator/tests/`)
 - `test_*.py` - Unit tests for each module
-- `config_*.json` - Test configuration files
+- `config_*.yaml` - Test configuration files
 - `df_start.pkl` - Test data fixtures
 - `import_helpers.py` - Test utilities
 
 ## Demo & Examples (`demo/`)
 - `example.py` - Main demonstration script
-- `config_rule.json` - Rule-based simulation config
-- `config_synthesizer.json` - Synthesizer-based simulation config
+- `config_rule.yaml` - Rule-based simulation config
+- `config_synthesizer.yaml` - Synthesizer-based simulation config
 - `demo/output/` - Generated demo files
 
 ## Development Support
@@ -41,7 +41,7 @@
 - `_support/` - External support materials and submodules
 
 ## Configuration Patterns
-- JSON-based configuration with hierarchical structure
+- YAML-based configuration with hierarchical structure
 - Mode-specific sections: `RULE`, `SYNTHESIZER`, `BASELINE`
 - Output control via `OUTPUT.dir` and `OUTPUT.file_prefix`
 - Reproducibility via `SEED` parameter

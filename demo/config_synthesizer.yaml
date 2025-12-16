@@ -1,0 +1,12 @@
+SEED: 42
+
+OUTPUT:
+  dir: demo/output_mc
+  file_prefix: sdv_demo
+
+SYNTHESIZER:
+  SYNTHESIZER_TYPE: gaussian_copula
+  DEFAULT_PRODUCTS_ROWS: 30
+  DEFAULT_SALES_ROWS: 5000
+
+EFFECT: "quantity_boost:0.5"

@@ -16,12 +16,12 @@ pip install -e ".[dev]"
 
 ## Quick Start
 
-The simplest way to use the simulator is with a JSON configuration file:
+The simplest way to use the simulator is with a YAML configuration file:
 
 ```python
 from online_retail_simulator import simulate
 
-simulate("config.json")
+simulate("config.yaml")
 ```
 
 ### Configuration (prefix-based)
@@ -36,40 +36,45 @@ Required keys:
 
 Rule-based example (baseline only):
 
-```json
-{
-  "SIMULATOR": { "mode": "rule" },
-  "SEED": 42,
-  "OUTPUT": { "dir": "demo/output", "file_prefix": "rb_demo" },
-  "BASELINE": {
-    "NUM_PRODUCTS": 50,
-    "DATE_START": "2024-11-01",
-    "DATE_END": "2024-11-30",
-    "SALE_PROB": 0.7
-  },
-  "RULE": {}
-}
+```yaml
+SIMULATOR:
+  mode: rule
+
+SEED: 42
+
+OUTPUT:
+  dir: demo/output
+  file_prefix: rb_demo
+
+RULE:
+  NUM_PRODUCTS: 50
+  DATE_START: "2024-11-01"
+  DATE_END: "2024-11-30"
+  SALE_PROB: 0.7
 ```
 
 Synthesizer example:
 
-```json
-{
-  "SIMULATOR": { "mode": "synthesizer" },
-  "SEED": 42,
-  "OUTPUT": { "dir": "demo/output_mc", "file_prefix": "sdv_demo" },
-  "BASELINE": {
-    "NUM_PRODUCTS": 30,
-    "DATE_START": "2024-11-01",
-    "DATE_END": "2024-11-15",
-    "SALE_PROB": 0.7
-  },
-  "SYNTHESIZER": {
-    "SYNTHESIZER_TYPE": "gaussian_copula",
-    "DEFAULT_PRODUCTS_ROWS": 30,
-    "DEFAULT_SALES_ROWS": 5000
-  }
-}
+```yaml
+SIMULATOR:
+  mode: synthesizer
+
+SEED: 42
+
+OUTPUT:
+  dir: demo/output_mc
+  file_prefix: sdv_demo
+
+RULE:
+  NUM_PRODUCTS: 30
+  DATE_START: "2024-11-01"
+  DATE_END: "2024-11-15"
+  SALE_PROB: 0.7
+
+SYNTHESIZER:
+  SYNTHESIZER_TYPE: gaussian_copula
+  DEFAULT_PRODUCTS_ROWS: 30
+  DEFAULT_SALES_ROWS: 5000
 ```
 
 Derived filenames (under `OUTPUT.dir`):
@@ -107,7 +112,7 @@ Run the example script to see the simulator in action:
 python demo/example.py
 ```
 
-This generates sample product and sales data based on `demo/config.json`, saving them to `demo/output/products.json` and `demo/output/sales.json`.
+This generates sample product and sales data based on `demo/config_rule.yaml`, saving them to `demo/output/products.json` and `demo/output/sales.json`.
 
 ## Features
 
@@ -116,7 +121,7 @@ This generates sample product and sales data based on `demo/config.json`, saving
 - **Stochastic sales patterns**: Not every product sells every day (70% probability by default)
 - **Reproducible**: Use seed parameter for deterministic output
 - **JSON export**: Easy data export for use in other tools
-- **Config-driven**: Single entry point with JSON configuration
+- **Config-driven**: Single entry point with YAML configuration
 
 ## Data Structure
 

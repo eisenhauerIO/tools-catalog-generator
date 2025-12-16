@@ -12,7 +12,7 @@ pytestmark = pytest.mark.skipif(not has_synthesizer(), reason="SDV dependencies 
 def test_metrics_synthesizer():
     import os
 
-    config_path = os.path.join(os.path.dirname(__file__), "config_synthesizer.json")
+    config_path = os.path.join(os.path.dirname(__file__), "config_synthesizer.yaml")
     products = simulate_characteristics(config_path)
     df = simulate_metrics(products, config_path)
     assert isinstance(df, pd.DataFrame)
