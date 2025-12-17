@@ -29,22 +29,14 @@ All steps must be run inside a freshly pruned [hatch](https://hatch.pypa.io/) en
      ```
    - If any test fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
-4. **Run the Demo Script in Hatch**
+4. **Run All Demo Scripts in Hatch**
    - Run:
      ```bash
-     hatch run python demo/example.py
+     cd demo && hatch run python run_all_demos.py
      ```
-   - If the script fails (non-zero exit code), STOP. Ask the user for input before continuing.
+   - If any demo script fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
-5. **Run All Debug Notebooks**
-   - Run:
-     ```bash
-     hatch run python debug/run_all_debug_notebooks.py
-     ```
-   - This script will execute all notebooks in the debug directory to ensure they run without errors.
-   - If any notebook execution fails (non-zero exit code), STOP. Ask the user for input before continuing.
-
-6. **Clean Untracked Files and Directories**
+5. **Clean Untracked Files and Directories**
    - Run:
      ```bash
      git clean -xdf

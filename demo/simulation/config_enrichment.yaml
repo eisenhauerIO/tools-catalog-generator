@@ -1,9 +1,0 @@
-# Treatment impact specification
-IMPACT:
-  FUNCTION: "combined_boost"
-  PARAMS:
-    effect_size: 0.5
-    ramp_days: 7
-    enrichment_fraction: 0.3
-    enrichment_start: "2024-11-15"
-    seed: 42
