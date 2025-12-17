@@ -12,6 +12,9 @@ import pandas as pd
 # Global registry for enrichment functions
 _ENRICHMENT_REGISTRY = {}
 
+# Flag to track if defaults have been registered
+_ENRICHMENT_DEFAULTS_REGISTERED = False
+
 
 def parse_impact_spec(impact_spec: Dict) -> Tuple[str, str, Dict[str, Any]]:
     """
@@ -19,7 +22,7 @@ def parse_impact_spec(impact_spec: Dict) -> Tuple[str, str, Dict[str, Any]]:
 
     Supports dict format with capitalized keys:
     {"FUNCTION": "combined_boost", "PARAMS": {"effect_size": 0.5, "ramp_days": 7}}
-    {"MODULE": "my_module", "FUNCTION": "my_func", "PARAMS": {...}}
+    {"MODULE": "my_module", "FUNCTION": "my_func", "PARAMS": {...}}  # MODULE ignored, kept for compatibility
 
     Args:
         impact_spec: IMPACT specification from config (must be dict)
@@ -31,7 +34,7 @@ def parse_impact_spec(impact_spec: Dict) -> Tuple[str, str, Dict[str, Any]]:
         raise ValueError(f"IMPACT must be a dict with FUNCTION and PARAMS keys, got {type(impact_spec)}")
 
     # Dict format with capitalized keys
-    module_name = impact_spec.get("MODULE", "enrichment_impact_library")
+    module_name = impact_spec.get("MODULE", "enrichment_impact_library")  # Kept for backward compatibility
     function_name = impact_spec.get("FUNCTION")
     params = impact_spec.get("PARAMS", {})
 
@@ -39,6 +42,13 @@ def parse_impact_spec(impact_spec: Dict) -> Tuple[str, str, Dict[str, Any]]:
         raise ValueError("IMPACT dict must include 'FUNCTION' field")
 
     return module_name, function_name, params
+
+
+def clear_enrichment_registry() -> None:
+    """Clear all registered enrichment functions (useful for testing)."""
+    global _ENRICHMENT_DEFAULTS_REGISTERED
+    _ENRICHMENT_REGISTRY.clear()
+    _ENRICHMENT_DEFAULTS_REGISTERED = False
 
 
 def assign_enrichment(products: List[Dict], fraction: float, seed: int = None) -> List[Dict]:
@@ -68,6 +78,20 @@ def assign_enrichment(products: List[Dict], fraction: float, seed: int = None) -
         product["enriched"] = i in enriched_indices
 
     return enriched_products
+
+
+def _register_default_enrichment_functions():
+    """Register the default enrichment functions from enrichment_impact_library."""
+    global _ENRICHMENT_DEFAULTS_REGISTERED
+    if _ENRICHMENT_DEFAULTS_REGISTERED:
+        return
+
+    from .enrichment_impact_library import combined_boost, probability_boost, quantity_boost
+
+    _ENRICHMENT_REGISTRY["quantity_boost"] = quantity_boost
+    _ENRICHMENT_REGISTRY["probability_boost"] = probability_boost
+    _ENRICHMENT_REGISTRY["combined_boost"] = combined_boost
+    _ENRICHMENT_DEFAULTS_REGISTERED = True
 
 
 def register_enrichment_function(name: str, func: Callable) -> None:
@@ -127,32 +151,30 @@ def list_enrichment_functions() -> List[str]:
     Returns:
         List of registered function names
     """
+    _register_default_enrichment_functions()
     return list(_ENRICHMENT_REGISTRY.keys())
 
 
 def load_effect_function(module_name: str, function_name: str) -> Callable:
     """
-    Load treatment effect function from registry or module.
+    Load treatment effect function from registry.
 
     Args:
-        module_name: Name of module (e.g., 'enrichment_impact_library' or 'my_custom_effects')
-        function_name: Name of function within module
+        module_name: Name of module (ignored, kept for backward compatibility)
+        function_name: Name of function in registry
 
     Returns:
         Treatment effect function
     """
+    _register_default_enrichment_functions()
+
     # Check registry first
     if function_name in _ENRICHMENT_REGISTRY:
         return _ENRICHMENT_REGISTRY[function_name]
 
-    # Fall back to current module loading logic
-    try:
-        module = importlib.import_module(f"online_retail_simulator.{module_name}")
-    except (ImportError, ModuleNotFoundError):
-        # Fall back to importing as standalone module
-        module = importlib.import_module(module_name)
-
-    return getattr(module, function_name)
+    # If not found, raise clear error
+    available = list(_ENRICHMENT_REGISTRY.keys())
+    raise KeyError(f"Enrichment function '{function_name}' not registered. " f"Available: {available}")
 
 
 def apply_enrichment_to_sales(
@@ -221,7 +243,7 @@ def enrich(config_path: str, df: pd.DataFrame) -> pd.DataFrame:
 
     # Parse impact function
     module_name, function_name, all_params = parse_impact_spec(impact_spec)
-    impact_function = load_effect_function(module_name, function_name)
+    impact_function = load_effect_function(module_name, function_name)  # module_name ignored
 
     # Get product list from df - use asin as product identifier
     if "asin" not in df.columns:
@@ -240,7 +262,7 @@ def enrich(config_path: str, df: pd.DataFrame) -> pd.DataFrame:
     # Convert back to DataFrame and clean up
     for sale in treated_sales:
         sale.pop("product_id", None)  # Remove temporary product_id mapping
-        sale.pop("unit_price", None) if "price" in sale else None  # Remove duplicate price field
+        (sale.pop("unit_price", None) if "price" in sale else None)  # Remove duplicate price field
 
     enriched_df = pd.DataFrame(treated_sales)
 

@@ -31,9 +31,15 @@ def simulate_metrics(
     has_synthesizer = "SYNTHESIZER" in config_loaded
 
     if has_rule and not has_synthesizer:
-        from .simulate_metrics_rule_based import simulate_metrics_rule_based
+        # Check if a custom rule function is specified
+        rule_config = config_loaded["RULE"]
+        custom_function = rule_config.get("CUSTOM_METRICS_FUNCTION") or rule_config.get("CUSTOM_FUNCTION", "default")
 
-        return simulate_metrics_rule_based(product_characteristics, config_path)
+        from .rule_registry import SimulationRegistry
+
+        func = SimulationRegistry.get_metrics_function(custom_function)
+        return func(product_characteristics, config_path, config=config_loaded)
+
     elif has_synthesizer and not has_rule:
         from .simulate_metrics_synthesizer_based import simulate_metrics_synthesizer_based
 

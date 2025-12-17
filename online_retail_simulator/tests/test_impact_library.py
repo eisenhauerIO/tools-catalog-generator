@@ -60,7 +60,13 @@ class TestQuantityBoost:
         """Test basic quantity boost functionality."""
         sales = create_test_sales()
 
-        result = quantity_boost(sales, effect_size=0.5, enrichment_fraction=0.5, enrichment_start="2024-11-15", seed=42)
+        result = quantity_boost(
+            sales,
+            effect_size=0.5,
+            enrichment_fraction=0.5,
+            enrichment_start="2024-11-15",
+            seed=42,
+        )
 
         # Should return same number of sales
         assert len(result) == len(sales)
@@ -114,11 +120,19 @@ class TestQuantityBoost:
         sales = create_test_sales()
 
         result1 = quantity_boost(
-            sales, effect_size=0.3, enrichment_fraction=0.5, enrichment_start="2024-11-15", seed=123
+            sales,
+            effect_size=0.3,
+            enrichment_fraction=0.5,
+            enrichment_start="2024-11-15",
+            seed=123,
         )
 
         result2 = quantity_boost(
-            sales, effect_size=0.3, enrichment_fraction=0.5, enrichment_start="2024-11-15", seed=123
+            sales,
+            effect_size=0.3,
+            enrichment_fraction=0.5,
+            enrichment_start="2024-11-15",
+            seed=123,
         )
 
         # Results should be identical
@@ -141,11 +155,19 @@ class TestQuantityBoost:
             )
 
         result1 = quantity_boost(
-            sales, effect_size=0.5, enrichment_fraction=0.5, enrichment_start="2024-11-15", seed=42
+            sales,
+            effect_size=0.5,
+            enrichment_fraction=0.5,
+            enrichment_start="2024-11-15",
+            seed=42,
         )
 
         result2 = quantity_boost(
-            sales, effect_size=0.5, enrichment_fraction=0.5, enrichment_start="2024-11-15", seed=999
+            sales,
+            effect_size=0.5,
+            enrichment_fraction=0.5,
+            enrichment_start="2024-11-15",
+            seed=999,
         )
 
         # With 10 products and 50% enrichment, different seeds should produce different results
@@ -205,11 +227,19 @@ class TestProbabilityBoost:
         sales = create_test_sales()
 
         prob_result = probability_boost(
-            sales, effect_size=0.3, enrichment_fraction=0.5, enrichment_start="2024-11-15", seed=42
+            sales,
+            effect_size=0.3,
+            enrichment_fraction=0.5,
+            enrichment_start="2024-11-15",
+            seed=42,
         )
 
         qty_result = quantity_boost(
-            sales, effect_size=0.3, enrichment_fraction=0.5, enrichment_start="2024-11-15", seed=42
+            sales,
+            effect_size=0.3,
+            enrichment_fraction=0.5,
+            enrichment_start="2024-11-15",
+            seed=42,
         )
 
         # Results should be identical since probability_boost calls quantity_boost
@@ -220,7 +250,11 @@ class TestProbabilityBoost:
         sales = create_test_sales()
 
         result = probability_boost(
-            sales, effect_size=0.4, enrichment_fraction=0.6, enrichment_start="2024-11-15", seed=123
+            sales,
+            effect_size=0.4,
+            enrichment_fraction=0.6,
+            enrichment_start="2024-11-15",
+            seed=123,
         )
 
         assert len(result) == len(sales)
@@ -243,7 +277,12 @@ class TestCombinedBoost:
         sales = create_test_sales()
 
         result = combined_boost(
-            sales, effect_size=0.5, ramp_days=3, enrichment_fraction=0.5, enrichment_start="2024-11-15", seed=42
+            sales,
+            effect_size=0.5,
+            ramp_days=3,
+            enrichment_fraction=0.5,
+            enrichment_start="2024-11-15",
+            seed=42,
         )
 
         assert len(result) == len(sales)
@@ -343,11 +382,21 @@ class TestCombinedBoost:
         sales = create_test_sales()
 
         result1 = combined_boost(
-            sales, effect_size=0.3, ramp_days=5, enrichment_fraction=0.4, enrichment_start="2024-11-15", seed=456
+            sales,
+            effect_size=0.3,
+            ramp_days=5,
+            enrichment_fraction=0.4,
+            enrichment_start="2024-11-15",
+            seed=456,
         )
 
         result2 = combined_boost(
-            sales, effect_size=0.3, ramp_days=5, enrichment_fraction=0.4, enrichment_start="2024-11-15", seed=456
+            sales,
+            effect_size=0.3,
+            ramp_days=5,
+            enrichment_fraction=0.4,
+            enrichment_start="2024-11-15",
+            seed=456,
         )
 
         assert result1 == result2
@@ -441,7 +490,13 @@ class TestImpactLibraryEdgeCases:
             }
         ]
 
-        result = quantity_boost(sales, effect_size=0.5, enrichment_fraction=1.0, enrichment_start="2024-11-15", seed=42)
+        result = quantity_boost(
+            sales,
+            effect_size=0.5,
+            enrichment_fraction=1.0,
+            enrichment_start="2024-11-15",
+            seed=42,
+        )
 
         treated_sale = result[0]
         # Should use price as unit_price: 3 * 75 = 225

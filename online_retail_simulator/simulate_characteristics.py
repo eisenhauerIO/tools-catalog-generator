@@ -26,9 +26,17 @@ def simulate_characteristics(config_path: str, config: Optional[Dict] = None) ->
     has_synthesizer = "SYNTHESIZER" in config_loaded
 
     if has_rule and not has_synthesizer:
-        from .simulate_characteristics_rule_based import simulate_characteristics_rule_based
+        # Check if a custom rule function is specified
+        rule_config = config_loaded["RULE"]
+        custom_function = rule_config.get("CUSTOM_CHARACTERISTICS_FUNCTION") or rule_config.get(
+            "CUSTOM_FUNCTION", "default"
+        )
 
-        return simulate_characteristics_rule_based(config_path)
+        from .rule_registry import SimulationRegistry
+
+        func = SimulationRegistry.get_characteristics_function(custom_function)
+        return func(config_path, config_loaded)
+
     elif has_synthesizer and not has_rule:
         from .simulate_characteristics_synthesizer_based import simulate_characteristics_synthesizer_based
 
