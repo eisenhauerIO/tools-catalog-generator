@@ -2,5 +2,29 @@ STORAGE:
   PATH: output/run
 
 RULE:
-  NUM_PRODUCTS: 100
-  SALE_PROB: 0.7
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 100
+      seed: null
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-01-01"
+      date_end: "2024-01-31"
+      sale_prob: 0.7
+      seed: null
+
+SYNTHESIZER:
+  CHARACTERISTICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: null
+      num_rows: 100
+      seed: null
+  METRICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: null
+      num_rows: 1000
+      seed: null

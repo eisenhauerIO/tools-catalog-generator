@@ -89,6 +89,7 @@ def main():
 
     # Load simulation results
     from online_retail_simulator import load_job_results
+
     products_df, sales_df = load_job_results(job_id)
     print(f"✓ Generated {len(sales_df)} sales records")
     print(f"✓ Date range: {sales_df['date'].min()} to {sales_df['date'].max()}")

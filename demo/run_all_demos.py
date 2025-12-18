@@ -19,7 +19,11 @@ def main():
     demo_scripts = []
     for root, dirs, files in os.walk(script_dir):
         for file in files:
-            if file.startswith("run_") and file.endswith(".py") and file != "run_all_demos.py":
+            if (
+                file.startswith("run_")
+                and file.endswith(".py")
+                and file != "run_all_demos.py"
+            ):
                 # Store both the directory and the script name
                 script_path = os.path.join(root, file)
                 demo_scripts.append((root, file, script_path))
@@ -40,7 +44,9 @@ def main():
             subprocess.run([sys.executable, script_name], check=True, cwd=script_dir)
             print(f"✓ {os.path.relpath(script_path)} completed successfully")
         except subprocess.CalledProcessError as e:
-            print(f"✗ {os.path.relpath(script_path)} failed with exit code {e.returncode}")
+            print(
+                f"✗ {os.path.relpath(script_path)} failed with exit code {e.returncode}"
+            )
             raise
 
     print("\n" + "=" * 60)

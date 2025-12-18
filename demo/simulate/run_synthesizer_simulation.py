@@ -25,14 +25,14 @@ def main():
         print(f"✓ Columns: {list(products_df.columns)}")
 
         # Show category breakdown
-        if 'category' in products_df.columns:
+        if "category" in products_df.columns:
             print(f"\nCategory breakdown:")
-            category_counts = products_df['category'].value_counts()
+            category_counts = products_df["category"].value_counts()
             for category, count in category_counts.items():
                 print(f"  {category}: {count} products")
 
         # Show price statistics
-        if 'price' in products_df.columns:
+        if "price" in products_df.columns:
             print(f"\nPrice statistics:")
             print(f"  Min price: ${products_df['price'].min():.2f}")
             print(f"  Max price: ${products_df['price'].max():.2f}")
@@ -46,11 +46,11 @@ def main():
         print(f"✓ Columns: {list(sales_df.columns)}")
 
         # Show sales statistics
-        if 'revenue' in sales_df.columns:
+        if "revenue" in sales_df.columns:
             print(f"\nSales statistics:")
             print(f"  Total revenue: ${sales_df['revenue'].sum():.2f}")
             print(f"  Average order value: ${sales_df['revenue'].mean():.2f}")
-            if 'quantity' in sales_df.columns:
+            if "quantity" in sales_df.columns:
                 print(f"  Total quantity: {sales_df['quantity'].sum()}")
 
         print("\n" + "=" * 60)

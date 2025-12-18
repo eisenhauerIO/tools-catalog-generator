@@ -2,31 +2,32 @@
 Rule-based product metrics simulation (minimal skeleton).
 """
 
+from typing import Dict
+
 import pandas as pd
 
 
-def simulate_metrics_rule_based(product_characteristics: pd.DataFrame, config_path: str, **kwargs) -> pd.DataFrame:
+def simulate_metrics_rule_based(product_characteristics: pd.DataFrame, config: Dict) -> pd.DataFrame:
     """
     Generate synthetic daily product metrics (rule-based).
     Args:
         product_characteristics: DataFrame of product characteristics
-        config_path: Path to JSON configuration file
+        config: Complete configuration dictionary
     Returns:
         DataFrame of product metrics (one row per product per date, with all characteristics)
     """
     import random
     from datetime import datetime, timedelta
+    from typing import Dict
 
-    from ..config_processor import process_config
+    params = config["RULE"]["METRICS"]["PARAMS"]
+    date_start, date_end, sale_prob, seed = (
+        params["date_start"],
+        params["date_end"],
+        params["sale_prob"],
+        params["seed"],
+    )
 
-    config = kwargs.get("config")
-    if config is None:
-        config = process_config(config_path)
-    rule_config = config["RULE"]
-    date_start = rule_config.get("DATE_START")
-    date_end = rule_config.get("DATE_END")
-    sale_probability = rule_config.get("SALE_PROB", 0.7)
-    seed = config.get("SEED", None)
     if seed is not None:
         random.seed(seed)
 
@@ -37,7 +38,7 @@ def simulate_metrics_rule_based(product_characteristics: pd.DataFrame, config_pa
     current_date = start_date
     while current_date <= end_date:
         for _, prod in product_characteristics.iterrows():
-            sale_occurred = random.random() < sale_probability
+            sale_occurred = random.random() < sale_prob
             if sale_occurred:
                 quantity = random.choices([1, 2, 3, 4, 5], weights=[50, 25, 15, 7, 3])[0]
                 revenue = round(prod["price"] * quantity, 2)

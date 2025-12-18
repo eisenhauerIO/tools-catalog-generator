@@ -85,6 +85,7 @@ def main():
 
     # Load results for analysis
     from online_retail_simulator import load_job_results
+
     products_df, sales_df = load_job_results(job_id)
 
     print(f"✓ Generated {len(sales_df)} sales records")

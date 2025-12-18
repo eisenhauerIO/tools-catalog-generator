@@ -39,21 +39,23 @@ def simulate_metrics(
         metrics_config = rule_config["METRICS"]
         function_name = metrics_config.get("FUNCTION", "default")
 
-        # Merge PARAMS for backward compatibility
-        if "PARAMS" in metrics_config:
-            params = {k.upper(): v for k, v in metrics_config["PARAMS"].items()}
-            rule_config.update(params)
-
         from .rule_registry import SimulationRegistry
 
         func = SimulationRegistry.get_metrics_function(function_name)
-        return func(product_characteristics, config_path, config=config_loaded)
+        return func(product_characteristics, config_loaded)
 
     elif "SYNTHESIZER" in config_loaded:
         # Synthesizer-based generation
+        synthesizer_config = config_loaded["SYNTHESIZER"]
+        metrics_config = synthesizer_config["METRICS"]
+        function_name = metrics_config.get("FUNCTION")
+
+        if function_name != "gaussian_copula":
+            raise NotImplementedError(f"Metrics function '{function_name}' not implemented")
+
         from .metrics_synthesizer_based import simulate_metrics_synthesizer_based
 
-        return simulate_metrics_synthesizer_based(product_characteristics, config_path, config=config_loaded)
+        return simulate_metrics_synthesizer_based(product_characteristics, config_loaded)
 
     else:
         # Hard failure - no valid configuration

@@ -31,10 +31,17 @@ def simulate_characteristics(config_path: str, config: Optional[Dict] = None) ->
         from .rule_registry import SimulationRegistry
 
         func = SimulationRegistry.get_characteristics_function(function_name)
-        return func(config_path, config_loaded)
+        return func(config_loaded)
 
     elif "SYNTHESIZER" in config_loaded:
         # Synthesizer-based generation
+        synthesizer_config = config_loaded["SYNTHESIZER"]
+        characteristics_config = synthesizer_config["CHARACTERISTICS"]
+        function_name = characteristics_config.get("FUNCTION")
+
+        if function_name != "gaussian_copula":
+            raise NotImplementedError(f"Synthesizer function '{function_name}' not implemented")
+
         from .characteristics_synthesizer_based import simulate_characteristics_synthesizer_based
 
         return simulate_characteristics_synthesizer_based(config_loaded)

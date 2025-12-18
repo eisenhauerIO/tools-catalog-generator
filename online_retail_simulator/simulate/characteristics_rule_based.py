@@ -43,22 +43,17 @@ _PRICE_RANGES = {
 }
 
 
-def simulate_characteristics_rule_based(config_path: str, config: Optional[Dict] = None) -> pd.DataFrame:
+def simulate_characteristics_rule_based(config: Dict) -> pd.DataFrame:
     """
     Generate synthetic product characteristics (rule-based).
     Args:
-        config_path: Path to JSON configuration file
-        config: Optional pre-loaded config (avoids re-reading)
+        config: Complete configuration dictionary
     Returns:
         DataFrame of product characteristics
     """
-    from ..config_processor import process_config
+    params = config["RULE"]["CHARACTERISTICS"]["PARAMS"]
+    num_products, seed = params["num_products"], params["seed"]
 
-    if config is None:
-        config = process_config(config_path)
-    rule_config = config["RULE"]
-    seed = config.get("SEED", None)
-    num_products = rule_config.get("NUM_PRODUCTS", 100)
     if seed is not None:
         random.seed(seed)
     products: List[Dict] = []
