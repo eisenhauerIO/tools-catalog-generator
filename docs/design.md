@@ -98,8 +98,8 @@ sales_df = simulate_metrics(products_df, config)
 ### 3. Optional Enrichment
 ```python
 # Apply treatment effects
-enriched_df = enrich(config, baseline_df)
-# Output: Modified DataFrame with treatment effects applied
+enriched_job = enrich("enrichment_config.yaml", baseline_job)
+# Output: JobInfo for enriched results
 ```
 
 ## Generation Modes
@@ -157,46 +157,55 @@ class EnrichmentRegistry:
 
 #### Quantity Boost
 ```python
-def quantity_boost(df, effect_size, **kwargs):
-    """Simple multiplicative increase in quantities"""
-    df['quantity'] *= (1 + effect_size)
-    return df
+def quantity_boost(sales, effect_size=0.5, enrichment_fraction=0.3,
+                   enrichment_start="2024-11-15", seed=42, **kwargs):
+    """Simple multiplicative increase in ordered units"""
+    # Boosts ordered_units by effect_size for enriched products
+    # Returns: List of modified sale dictionaries
 ```
 
 #### Probability Boost
 ```python
-def probability_boost(df, effect_size, **kwargs):
+def probability_boost(sales, **kwargs):
     """Increase sale probability for treated products"""
-    # Implementation increases likelihood of sales
+    # Same as quantity_boost (probability reflected in quantity for existing sales)
 ```
 
 #### Combined Boost (Realistic)
 ```python
-def combined_boost(df, effect_size, ramp_days, enrichment_fraction, **kwargs):
+def combined_boost(sales, effect_size=0.5, ramp_days=7, enrichment_fraction=0.3,
+                   enrichment_start="2024-11-15", seed=42, **kwargs):
     """Gradual rollout with partial treatment"""
     # Realistic implementation with:
-    # - Gradual effect ramp-up
-    # - Partial product treatment
-    # - Date-based activation
+    # - Gradual effect ramp-up over ramp_days
+    # - Partial product treatment (enrichment_fraction)
+    # - Date-based activation (enrichment_start)
+    # Returns: List of modified sale dictionaries
 ```
 
 ## Configuration Schema
 
 ### Simulation Configuration
 ```yaml
-SEED: 42                    # Reproducibility control
+SEED: 42                    # Reproducibility control (optional)
 
-OUTPUT:
-  DIR: "output"             # Output directory
-  FILE_PREFIX: "experiment" # File naming prefix
+STORAGE:
+  PATH: "output"            # Output directory for job results
 
 RULE:                       # Rule-based mode settings
-  NUM_PRODUCTS: 100
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-30"
-  SALE_PROB: 0.7
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 100
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-11-01"
+      date_end: "2024-11-30"
+      sale_prob: 0.7
+      granularity: "daily"  # or "weekly"
 
-SYNTHESIZER:                # ML-based mode settings
+SYNTHESIZER:                # ML-based mode settings (alternative to RULE)
   SYNTHESIZER_TYPE: "gaussian_copula"
   DEFAULT_PRODUCTS_ROWS: 50
   DEFAULT_SALES_ROWS: 1000

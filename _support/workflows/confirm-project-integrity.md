@@ -39,7 +39,7 @@ All steps must be run inside a freshly pruned [hatch](https://hatch.pypa.io/) en
 5. **Verify Documentation Integrity**
    - Build the Sphinx documentation:
      ```bash
-     hatch run make
+     cd docs && hatch run make html
      ```
    - If the build fails or produces warnings, STOP. Ask the user for input before continuing.
    - Manually verify (spot check):
@@ -47,6 +47,7 @@ All steps must be run inside a freshly pruned [hatch](https://hatch.pypa.io/) en
      * No duplicate configuration examples across docs/
      * Data schemas only appear in docs/user-guide.md (other files should link)
      * All internal cross-references point to correct locations
+     * Code examples match actual API (check against `online_retail_simulator/__init__.py`)
    - See [maintain-documentation.md](maintain-documentation.md) for the complete content ownership matrix
 
 6. **Clean Untracked Files and Directories**

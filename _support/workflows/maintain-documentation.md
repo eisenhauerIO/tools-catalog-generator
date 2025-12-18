@@ -29,17 +29,34 @@ Check the matrix above to find where content should be updated.
 
 Make your changes in the primary location first.
 
-### 3. Update Cross-References
+### 3. Verify Against Actual Code
+
+**CRITICAL**: Before finalizing documentation changes, verify all examples match the actual codebase:
+
+- Check API signatures in `online_retail_simulator/__init__.py` for public API
+- Verify function parameters match actual implementation
+- Confirm configuration keys match actual config processor
+- Test code examples actually run without errors
+- Verify data schemas match actual DataFrame outputs
+
+**Common verification points**:
+- `simulate()` returns `JobInfo`, not `DataFrame`
+- `enrich()` takes `(config_path, job_info)` not `(config, dataframe)`
+- Use `load_job_results(job_info)` to get DataFrames
+- Config uses `STORAGE.PATH` not `OUTPUT.DIR`
+- Rule config has nested `CHARACTERISTICS` and `METRICS` sections
+
+### 4. Update Cross-References
 
 If content is cross-referenced elsewhere:
 - Use links, not duplication
 - Keep summaries brief (1-4 lines maximum)
 - Always point to the primary location for details
 
-### 4. Verify Changes
+### 5. Verify Changes
 
 Before committing documentation updates:
-- Build Sphinx docs: `hatch run make`
+- Build Sphinx docs locally (from docs/): `cd docs && hatch run make html`
 - Check for broken links (manually review)
 - Verify all code examples work
 - Review against this workflow
@@ -117,9 +134,13 @@ Before committing documentation changes, verify:
 - [ ] New content follows the Content Ownership Matrix
 
 ### Technical Review
+- [ ] **Code verified against actual implementation** (see Step 3 above)
+- [ ] API signatures match `online_retail_simulator/__init__.py`
+- [ ] Function parameters match actual implementations
+- [ ] Configuration keys match actual config processor
 - [ ] All code examples are tested and work
 - [ ] Configuration examples match actual schema
-- [ ] API examples use current function signatures
+- [ ] Data schemas match actual DataFrame outputs
 - [ ] Version numbers are current (if applicable)
 
 ### Link Validation
@@ -130,7 +151,7 @@ Before committing documentation changes, verify:
 - [ ] No broken links in GitHub Pages
 
 ### Build Validation
-- [ ] `hatch run make` succeeds with no warnings
+- [ ] `cd docs && hatch run make html` succeeds with no warnings
 - [ ] Generated HTML renders correctly
 - [ ] Navigation works in built docs
 

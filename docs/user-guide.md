@@ -34,10 +34,13 @@ python demo/run_all_demos.py
 The simplest way to generate synthetic retail data:
 
 ```python
-from online_retail_simulator import simulate
+from online_retail_simulator import simulate, load_job_results
 
 # Generate 30 days of sales data
-sales_df = simulate("demo/simulate/config_default_simulation.yaml")
+job_info = simulate("demo/simulate/config_default_simulation.yaml")
+
+# Load the results
+products_df, sales_df = load_job_results(job_info)
 
 # Explore the data
 print(f"Generated {len(sales_df)} sales records")
@@ -102,10 +105,11 @@ cart_conversion = sales_df['cart_adds'].sum() / sales_df['visits'].sum()
 
 **Solution**:
 ```python
-from online_retail_simulator import simulate
+from online_retail_simulator import simulate, load_job_results
 
 # Generate 30 days of sales data across 8 categories
-sales_df = simulate("config.yaml")
+job_info = simulate("config.yaml")
+products_df, sales_df = load_job_results(job_info)
 print(f"Generated {len(sales_df)} sales records for ML training")
 ```
 
@@ -133,15 +137,18 @@ RULE:
 
 **Solution**:
 ```python
-from online_retail_simulator import simulate, enrich
+from online_retail_simulator import simulate, enrich, load_job_results
 
 # Generate baseline data
-baseline_df = simulate("simulation_config.yaml")
+baseline_job = simulate("simulation_config.yaml")
 
 # Simulate enrichment impact (30% of products, 50% boost, 7-day ramp)
-enriched_df = enrich("enrichment_config.yaml", baseline_df)
+enriched_job = enrich("enrichment_config.yaml", baseline_job)
 
-# Compare results
+# Load and compare results
+_, baseline_df = load_job_results(baseline_job)
+_, enriched_df = load_job_results(enriched_job)
+
 lift = (enriched_df['revenue'].sum() / baseline_df['revenue'].sum() - 1) * 100
 print(f"Projected revenue lift: {lift:.1f}%")
 ```
@@ -203,10 +210,11 @@ RULE:
 **Solution**:
 ```python
 # Quick integration testing
-from online_retail_simulator import simulate
+from online_retail_simulator import simulate, load_job_results
 
 # Generate test data matching your schema
-sales_df = simulate("test_config.yaml")
+job_info = simulate("test_config.yaml")
+_, sales_df = load_job_results(job_info)
 
 # Use in your tests
 assert len(sales_df) > 0
@@ -260,10 +268,13 @@ RULE:
 Generate a basic dataset with rule-based simulation:
 
 ```python
-from online_retail_simulator import simulate
+from online_retail_simulator import simulate, load_job_results
 
 # Generate 30 days of sales data
-sales_df = simulate("demo/simulate/config_default_simulation.yaml")
+job_info = simulate("demo/simulate/config_default_simulation.yaml")
+
+# Load the results
+products_df, sales_df = load_job_results(job_info)
 
 # Explore the data
 print(f"Generated {len(sales_df)} sales records")
@@ -294,23 +305,21 @@ For complete configuration documentation, see the [Configuration Reference](conf
 ```yaml
 # minimal_config.yaml
 SEED: 42
-OUTPUT:
-  DIR: "output"
-  FILE_PREFIX: "minimal"
+STORAGE:
+  PATH: "output"
 RULE:
   NUM_PRODUCTS: 20
   DATE_START: "2024-11-01"
   DATE_END: "2024-11-07"
-  SALE_PROB: 0.8
+  SALE_PROB: 0.7
 ```
 
 **Large Dataset Configuration**:
 ```yaml
 # large_dataset_config.yaml
 SEED: 42
-OUTPUT:
-  DIR: "output"
-  FILE_PREFIX: "large_dataset"
+STORAGE:
+  PATH: "output"
 RULE:
   NUM_PRODUCTS: 1000
   DATE_START: "2024-01-01"
@@ -322,9 +331,8 @@ RULE:
 ```yaml
 # ml_config.yaml
 SEED: 42
-OUTPUT:
-  DIR: "output"
-  FILE_PREFIX: "ml_generated"
+STORAGE:
+  PATH: "output"
 SYNTHESIZER:
   SYNTHESIZER_TYPE: "gaussian_copula"
   DEFAULT_PRODUCTS_ROWS: 200
@@ -336,14 +344,16 @@ SYNTHESIZER:
 **Basic Enrichment**:
 
 ```python
-from online_retail_simulator import simulate, enrich
+from online_retail_simulator import simulate, enrich, load_job_results
 
 # Generate baseline data
-baseline_df = simulate("simulation_config.yaml")
+baseline_job = simulate("simulation_config.yaml")
+_, baseline_df = load_job_results(baseline_job)
 print(f"Baseline revenue: ${baseline_df['revenue'].sum():,.2f}")
 
 # Apply enrichment
-enriched_df = enrich("enrichment_config.yaml", baseline_df)
+enriched_job = enrich("enrichment_config.yaml", baseline_job)
+_, enriched_df = load_job_results(enriched_job)
 print(f"Enriched revenue: ${enriched_df['revenue'].sum():,.2f}")
 
 # Calculate lift
@@ -367,10 +377,13 @@ IMPACT:
 **Multiple Enrichment Scenarios**:
 
 ```python
-from online_retail_simulator import simulate, enrich
+from online_retail_simulator import simulate, enrich, load_job_results
+import yaml
+from pathlib import Path
 
 # Generate baseline once
-baseline_df = simulate("simulation_config.yaml")
+baseline_job = simulate("simulation_config.yaml")
+_, baseline_df = load_job_results(baseline_job)
 baseline_revenue = baseline_df['revenue'].sum()
 
 # Test multiple scenarios
@@ -382,7 +395,7 @@ scenarios = [
 
 results = []
 for i, params in enumerate(scenarios):
-    # Create config for this scenario
+    # Create temporary config file for this scenario
     config = {
         "IMPACT": {
             "FUNCTION": "combined_boost",
@@ -395,8 +408,13 @@ for i, params in enumerate(scenarios):
         }
     }
 
+    config_path = f"temp_scenario_{i}.yaml"
+    with open(config_path, 'w') as f:
+        yaml.dump(config, f)
+
     # Apply enrichment
-    enriched_df = enrich(config, baseline_df)
+    enriched_job = enrich(config_path, baseline_job)
+    _, enriched_df = load_job_results(enriched_job)
     lift = (enriched_df['revenue'].sum() / baseline_revenue - 1) * 100
 
     results.append({
@@ -405,6 +423,9 @@ for i, params in enumerate(scenarios):
         "enrichment_fraction": params["enrichment_fraction"],
         "revenue_lift": lift
     })
+
+    # Clean up temp file
+    Path(config_path).unlink()
 
 # Display results
 for result in results:
@@ -416,18 +437,20 @@ for result in results:
 **Complete A/B Test Simulation**:
 
 ```python
-from online_retail_simulator import simulate, enrich
+from online_retail_simulator import simulate, enrich, load_job_results
 import pandas as pd
 
 def run_ab_test(simulation_config, enrichment_config, test_name):
     """Run a complete A/B test simulation"""
 
     # Generate control group (baseline)
-    control_df = simulate(simulation_config)
+    control_job = simulate(simulation_config)
+    _, control_df = load_job_results(control_job)
     control_revenue = control_df['revenue'].sum()
 
     # Generate treatment group (enriched)
-    treatment_df = enrich(enrichment_config, control_df)
+    treatment_job = enrich(enrichment_config, control_job)
+    _, treatment_df = load_job_results(treatment_job)
     treatment_revenue = treatment_df['revenue'].sum()
 
     # Calculate metrics
@@ -498,11 +521,13 @@ print(results_df[['test_name', 'relative_lift_pct', 'absolute_lift']])
 **Category Analysis**:
 
 ```python
+from online_retail_simulator import simulate, load_job_results
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # Generate data
-sales_df = simulate("config.yaml")
+job_info = simulate("config.yaml")
+_, sales_df = load_job_results(job_info)
 
 # Revenue by category
 category_revenue = sales_df.groupby('category')['revenue'].sum().sort_values(ascending=False)
@@ -573,10 +598,11 @@ print(top_efficiency[['asin', 'category', 'revenue_per_unit']])
 %matplotlib inline
 import pandas as pd
 import matplotlib.pyplot as plt
-from online_retail_simulator import simulate, enrich
+from online_retail_simulator import simulate, enrich, load_job_results
 
 # Cell 2: Generate data
-sales_df = simulate("config.yaml")
+job_info = simulate("config.yaml")
+_, sales_df = load_job_results(job_info)
 print(f"Generated {len(sales_df)} records")
 sales_df.head()
 
@@ -594,8 +620,11 @@ plt.show()
 ### Pandas Integration
 
 ```python
+from online_retail_simulator import simulate, load_job_results
+
 # Seamless pandas integration
-sales_df = simulate("config.yaml")
+job_info = simulate("config.yaml")
+_, sales_df = load_job_results(job_info)
 
 # Standard pandas operations work immediately
 summary_stats = sales_df.describe()

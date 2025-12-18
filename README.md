@@ -46,15 +46,18 @@ python -c "from online_retail_simulator import simulate; \
 ## Example Usage
 
 ```python
-from online_retail_simulator import simulate, enrich
+from online_retail_simulator import simulate, enrich, load_job_results
 
 # Generate baseline sales data
-baseline_df = simulate("config.yaml")
+baseline_job = simulate("config.yaml")
 
 # Simulate enrichment impact
-enriched_df = enrich("enrichment_config.yaml", baseline_df)
+enriched_job = enrich("enrichment_config.yaml", baseline_job)
 
-# Compare results
+# Load and compare results
+_, baseline_df = load_job_results(baseline_job)
+_, enriched_df = load_job_results(enriched_job)
+
 lift = (enriched_df['revenue'].sum() / baseline_df['revenue'].sum() - 1) * 100
 print(f"Projected revenue lift: {lift:.1f}%")
 ```
