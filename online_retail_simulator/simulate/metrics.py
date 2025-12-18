@@ -53,7 +53,7 @@ def simulate_metrics(
         # Synthesizer-based generation
         from .metrics_synthesizer_based import simulate_metrics_synthesizer_based
 
-        return simulate_metrics_synthesizer_based(product_characteristics, config_path)
+        return simulate_metrics_synthesizer_based(product_characteristics, config_path, config=config_loaded)
 
     else:
         # Hard failure - no valid configuration

@@ -84,6 +84,21 @@ def validate_config(config: Dict[str, Any]) -> None:
             "SYNTHESIZER.CHARACTERISTICS.PARAMS",
             "SYNTHESIZER.CHARACTERISTICS.PARAMS is required",
         )
+        _require(
+            {"SYNTHESIZER": syn},
+            "SYNTHESIZER.METRICS",
+            "SYNTHESIZER.METRICS is required",
+        )
+        _require(
+            {"SYNTHESIZER": syn},
+            "SYNTHESIZER.METRICS.FUNCTION",
+            "SYNTHESIZER.METRICS.FUNCTION is required",
+        )
+        _require(
+            {"SYNTHESIZER": syn},
+            "SYNTHESIZER.METRICS.PARAMS",
+            "SYNTHESIZER.METRICS.PARAMS is required",
+        )
 
 
 def process_config(config_path: str) -> Dict[str, Any]:

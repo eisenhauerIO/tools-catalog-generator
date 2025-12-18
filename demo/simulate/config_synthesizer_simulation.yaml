@@ -1,0 +1,16 @@
+STORAGE:
+  PATH: demo/simulate/output/synthesizer_demo
+
+SYNTHESIZER:
+  CHARACTERISTICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: simulate/training_products.csv
+      num_rows: 20
+      seed: 42
+  METRICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: simulate/training_sales.csv
+      num_rows: 100
+      seed: 42

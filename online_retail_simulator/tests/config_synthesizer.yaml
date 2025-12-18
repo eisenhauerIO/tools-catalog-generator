@@ -8,5 +8,11 @@ SYNTHESIZER:
       training_data_path: online_retail_simulator/tests/df_start.csv
       num_rows: 10
       seed: 42
+  METRICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: online_retail_simulator/tests/df_sales.csv
+      num_rows: 50
+      seed: 42
 
 EFFECT: "quantity_boost:0.5"
