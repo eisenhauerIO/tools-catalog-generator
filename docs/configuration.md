@@ -83,9 +83,10 @@ When set to `"weekly"`:
    - Example: `2024-01-03` to `2024-01-25` becomes `2024-01-01` (Monday) to `2024-01-28` (Sunday)
 
 2. **Data aggregation**:
-   - `quantity` and `revenue` are summed across the week
+   - All funnel metrics (`impressions`, `visits`, `cart_adds`, `ordered_units`, `revenue`) are summed across the week
+   - `average_selling_price` is recalculated as `revenue / ordered_units` for the week
    - `date` column shows the Monday of each week (YYYY-MM-DD format)
-   - All products appear for all weeks, including weeks with zero sales
+   - All products appear for all weeks, including weeks with zero activity
 
 3. **ISO week standard**: Weeks run from Monday to Sunday
 

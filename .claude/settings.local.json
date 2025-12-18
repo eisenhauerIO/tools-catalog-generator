@@ -5,7 +5,8 @@
       "Bash(hatch run pytest:*)",
       "Bash(hatch run:*)",
       "Bash(git clean:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(cat:*)"
     ]
   }
 }

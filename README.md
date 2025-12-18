@@ -63,7 +63,7 @@ sales_df = simulate("test_config.yaml")
 
 # Use in your tests
 assert len(sales_df) > 0
-assert all(sales_df['revenue'] == sales_df['price'] * sales_df['quantity'])
+assert all(sales_df['revenue'] == sales_df['price'] * sales_df['ordered_units'])
 ```
 
 **Why this matters:** Eliminate dependencies on production databases, create reproducible test scenarios, and validate your application logic with consistent synthetic data.
@@ -113,6 +113,7 @@ RULE:
   DATE_START: "2024-11-01"
   DATE_END: "2024-11-30"
   SALE_PROB: 0.7
+  GRANULARITY: "daily"  # or "weekly" for aggregated data
 ```
 
 ### ML-Based Generation (Advanced)
@@ -264,16 +265,20 @@ python demo/enrich/run_default_enrichment.py
 ## Data Schema
 
 ### Sales DataFrame (Primary Output)
-The main output contains everything you need for analysis:
+The main output contains everything you need for analysis with customer journey funnel metrics:
 
 | Column | Type | Description | Example |
 |--------|------|-------------|---------|
 | `asin` | string | Unique product identifier | "BRPOIG8F1C" |
 | `category` | string | Product category | "Electronics" |
 | `price` | float | Unit price | 899.99 |
-| `date` | string | Sale date (YYYY-MM-DD) | "2024-11-15" |
-| `quantity` | int | Units sold | 2 |
-| `revenue` | float | Total revenue (price × quantity) | 1799.98 |
+| `date` | string | Sale date (YYYY-MM-DD) or week start for weekly granularity | "2024-11-15" |
+| `impressions` | int | Number of product impressions | 50 |
+| `visits` | int | Number of product page visits | 10 |
+| `cart_adds` | int | Number of add-to-cart actions | 3 |
+| `ordered_units` | int | Units sold/ordered | 2 |
+| `revenue` | float | Total revenue (price × ordered_units) | 1799.98 |
+| `average_selling_price` | float | Effective selling price per unit | 899.99 |
 
 ### Products DataFrame (Intermediate)
 When using two-step generation:
@@ -290,8 +295,12 @@ When using two-step generation:
 category_revenue = sales_df.groupby('category')['revenue'].sum()
 
 # Daily trends
-daily_sales = sales_df.groupby('date')['quantity'].sum()
+daily_sales = sales_df.groupby('date')['ordered_units'].sum()
 
 # Product performance
 top_products = sales_df.groupby('asin')['revenue'].sum().sort_values(ascending=False)
+
+# Funnel conversion analysis
+conversion_rate = sales_df['ordered_units'].sum() / sales_df['impressions'].sum()
+cart_conversion = sales_df['cart_adds'].sum() / sales_df['visits'].sum()
 ```
