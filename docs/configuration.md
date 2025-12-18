@@ -1,401 +1,422 @@
 # Configuration Guide
 
-The Online Retail Simulator uses YAML configuration files to control all aspects of data generation and enrichment. This guide covers the complete configuration schema and common patterns.
+The Online Retail Simulator uses YAML configuration files to control all aspects of data generation and enrichment. This guide documents the **actual configuration schema** as implemented in the code.
 
-> **See Also**: For practical examples and tutorials on using these configurations, see the [User Guide](user-guide.md).
+> **See Also**: For practical examples and tutorials, see the [User Guide](user-guide.md).
 
 ## Configuration Structure
 
-All configuration files follow a hierarchical YAML structure with these main sections:
+All configuration files follow this hierarchical structure:
 
 ```yaml
-SEED: 42                    # Global reproducibility control
+STORAGE:                    # Optional: Output storage settings
+  PATH: "output/run"        # Directory for job-based storage
 
-OUTPUT:                     # Output file settings
-  DIR: "output"
-  FILE_PREFIX: "experiment"
+RULE:                       # Rule-based mode (use RULE or SYNTHESIZER, not both)
+  CHARACTERISTICS:
+    FUNCTION: function_name
+    PARAMS:
+      # Function-specific parameters
+  METRICS:
+    FUNCTION: function_name
+    PARAMS:
+      # Function-specific parameters
 
-RULE:                       # Rule-based generation settings
-  # Rule-specific parameters
-
-SYNTHESIZER:                # ML-based generation settings
-  # Synthesizer-specific parameters
-
-IMPACT:                     # Enrichment settings
-  # Treatment effect parameters
+SYNTHESIZER:                # ML-based mode (alternative to RULE)
+  CHARACTERISTICS:
+    FUNCTION: function_name
+    PARAMS:
+      # Function-specific parameters
+  METRICS:
+    FUNCTION: function_name
+    PARAMS:
+      # Function-specific parameters
 ```
 
-## Global Settings
+## Storage Configuration
 
-### SEED
-Controls reproducibility across all random operations.
+### STORAGE.PATH
+
+Controls where simulation results are saved.
 
 ```yaml
-SEED: 42  # Any integer value
+STORAGE:
+  PATH: "output/myproject"  # Base directory for job storage
 ```
 
-**Usage**:
-- Use the same seed for reproducible results
-- Change seed to generate different datasets
-- Required for scientific reproducibility
-
-### OUTPUT
-Controls where and how files are saved.
-
-```yaml
-OUTPUT:
-  DIR: "output"              # Output directory path
-  FILE_PREFIX: "my_experiment"  # Prefix for all output files
-```
-
-**Generated files**:
-- `{PREFIX}_products.json` - Product catalog
-- `{PREFIX}_sales.json` - Sales transactions
-- `{PREFIX}_enriched.json` - Enriched sales data
+**Behavior**:
+- Each simulation creates a unique job directory under this path
+- Job directories are named: `job-YYYYMMDD-HHMMSS-{uuid}`
+- Contains: `products.csv`, `sales.csv`, `metadata.json`, `config.yaml`
+- Default: `output/run`
 
 ## Rule-Based Configuration
 
-Rule-based mode generates data using deterministic algorithms with configurable parameters.
+Rule-based mode uses deterministic algorithms. You must specify exactly **one** of `RULE` or `SYNTHESIZER`.
 
-### Basic Parameters
+### Complete Example
 
 ```yaml
+STORAGE:
+  PATH: "output/sim_demo"
+
 RULE:
-  NUM_PRODUCTS: 100           # Total number of products to generate
-  DATE_START: "2024-11-01"    # Start date (YYYY-MM-DD)
-  DATE_END: "2024-11-30"      # End date (YYYY-MM-DD)
-  SALE_PROB: 0.7              # Daily probability of sale per product (0.0-1.0)
-  GRANULARITY: "daily"        # Time granularity: "daily" or "weekly" (default: "daily")
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 50
+      seed: null  # Optional: set for reproducibility
+
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-11-01"
+      date_end: "2024-11-30"
+      sale_prob: 0.7
+      seed: null  # Optional: set for reproducibility
+      granularity: "daily"  # or "weekly"
+      impression_to_visit_rate: 0.15
+      visit_to_cart_rate: 0.25
+      cart_to_order_rate: 0.80
 ```
 
-#### Granularity Parameter
+### RULE.CHARACTERISTICS Parameters
 
-The `GRANULARITY` parameter controls the time granularity of the generated metrics data.
+Function: `simulate_characteristics_rule_based`
 
-**Options:**
-- `"daily"` (default): One row per product per day
-- `"weekly"`: One row per product per week (ISO week, Monday-Sunday)
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `num_products` | int | 100 | Total number of products to generate |
+| `seed` | int or null | null | Random seed for reproducibility |
 
-**Weekly Granularity Behavior:**
+**Example**:
+```yaml
+RULE:
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 200
+      seed: 42
+```
 
-When set to `"weekly"`:
-1. **Date range adjustment**: The date range is automatically expanded to full week boundaries
-   - `DATE_START` is moved back to the Monday of that week
-   - `DATE_END` is moved forward to the Sunday of that week
-   - Example: `2024-01-03` to `2024-01-25` becomes `2024-01-01` (Monday) to `2024-01-28` (Sunday)
+### RULE.METRICS Parameters
 
-2. **Data aggregation**:
-   - All funnel metrics (`impressions`, `visits`, `cart_adds`, `ordered_units`, `revenue`) are summed across the week
-   - `average_selling_price` is recalculated as `revenue / ordered_units` for the week
-   - `date` column shows the Monday of each week (YYYY-MM-DD format)
-   - All products appear for all weeks, including weeks with zero activity
+Function: `simulate_metrics_rule_based`
 
-3. **ISO week standard**: Weeks run from Monday to Sunday
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `date_start` | string | "2024-01-01" | Start date (YYYY-MM-DD) |
+| `date_end` | string | "2024-01-31" | End date (YYYY-MM-DD) |
+| `sale_prob` | float | 0.7 | Daily probability of sale per product (0.0-1.0) |
+| `seed` | int or null | null | Random seed for reproducibility |
+| `granularity` | string | "daily" | Time granularity: "daily" or "weekly" |
+| `impression_to_visit_rate` | float | 0.15 | Funnel: impressions → visits conversion rate |
+| `visit_to_cart_rate` | float | 0.25 | Funnel: visits → cart adds conversion rate |
+| `cart_to_order_rate` | float | 0.80 | Funnel: cart adds → orders conversion rate |
 
-**Example - Daily (default):**
+**Example**:
 ```yaml
 RULE:
   METRICS:
     FUNCTION: simulate_metrics_rule_based
     PARAMS:
       date_start: "2024-01-01"
-      date_end: "2024-01-31"
-      sale_prob: 0.7
-      granularity: "daily"  # 310 rows (10 products × 31 days)
+      date_end: "2024-12-31"
+      sale_prob: 0.6
+      seed: 42
+      granularity: "daily"
 ```
 
-**Example - Weekly:**
+### Granularity: Daily vs Weekly
+
+The `granularity` parameter controls output aggregation:
+
+**Daily (default)**:
+- One row per product per day
+- Example: 10 products × 31 days = 310 rows
+
+**Weekly**:
+- One row per product per week (ISO week: Monday-Sunday)
+- Date range auto-expanded to full week boundaries
+- All funnel metrics summed across the week
+- `date` column shows Monday of each week
+- Example: 10 products × 5 weeks = 50 rows
+
+**Weekly Example**:
 ```yaml
 RULE:
   METRICS:
     FUNCTION: simulate_metrics_rule_based
     PARAMS:
-      date_start: "2024-01-01"
-      date_end: "2024-01-31"
+      date_start: "2024-01-03"  # Expanded to 2024-01-01 (Monday)
+      date_end: "2024-01-25"    # Expanded to 2024-01-28 (Sunday)
+      granularity: "weekly"
       sale_prob: 0.7
-      granularity: "weekly"  # 50 rows (10 products × 5 weeks)
 ```
 
-### Advanced Parameters
+### Funnel Conversion Rates
 
+Control the customer journey funnel:
+
+```
+Impressions → Visits → Cart Adds → Orders
+            ↓15%      ↓25%         ↓80%
+```
+
+**Example with custom funnel**:
 ```yaml
 RULE:
-  NUM_PRODUCTS: 100
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-30"
-  SALE_PROB: 0.7
-
-  # Category distribution (optional)
-  CATEGORY_WEIGHTS:
-    Electronics: 0.2
-    Books: 0.15
-    Clothing: 0.15
-    "Home & Garden": 0.15
-    Sports: 0.1
-    Beauty: 0.1
-    Toys: 0.1
-    Automotive: 0.05
-
-  # Price ranges by category (optional)
-  PRICE_RANGES:
-    Electronics: [50, 2000]
-    Books: [10, 100]
-    Clothing: [20, 300]
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-11-01"
+      date_end: "2024-11-30"
+      sale_prob: 0.7
+      impression_to_visit_rate: 0.20  # 20% of impressions → visits
+      visit_to_cart_rate: 0.30        # 30% of visits → cart adds
+      cart_to_order_rate: 0.85        # 85% of cart adds → orders
 ```
 
-### Parameter Validation
+## Synthesizer-Based Configuration
 
-- `NUM_PRODUCTS`: Must be positive integer
-- `DATE_START`/`DATE_END`: Must be valid dates in YYYY-MM-DD format
-- `SALE_PROB`: Must be between 0.0 and 1.0
-- `CATEGORY_WEIGHTS`: Must sum to 1.0 if provided
+ML-based mode uses SDV (Synthetic Data Vault) for sophisticated pattern learning.
 
-## Synthesizer Configuration
-
-Synthesizer mode uses machine learning models to generate more sophisticated patterns.
-
-### Basic Configuration
+### Complete Example
 
 ```yaml
+STORAGE:
+  PATH: "output/ml_demo"
+
 SYNTHESIZER:
-  SYNTHESIZER_TYPE: "gaussian_copula"    # SDV synthesizer type
-  DEFAULT_PRODUCTS_ROWS: 50              # Number of products to generate
-  DEFAULT_SALES_ROWS: 1000               # Number of sales records to generate
+  CHARACTERISTICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: "data/real_products.csv"  # Required
+      num_rows: 100
+      seed: null
+
+  METRICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: "data/real_sales.csv"  # Required
+      num_rows: 1000
+      seed: null
 ```
 
-### Supported Synthesizer Types
+### SYNTHESIZER.CHARACTERISTICS Parameters
 
-| Type | Description | Use Case |
-|------|-------------|----------|
-| `gaussian_copula` | Gaussian copula model | General purpose, good balance |
-| `ctgan` | Conditional GAN | Complex patterns, longer training |
-| `tvae` | Variational autoencoder | Tabular data, fast training |
-| `copula_gan` | Copula + GAN hybrid | High quality, moderate speed |
+Function: `gaussian_copula`
 
-### Advanced Configuration
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `training_data_path` | string | **Required** | Path to CSV file with real product data |
+| `num_rows` | int | 100 | Number of synthetic products to generate |
+| `seed` | int or null | null | Random seed for reproducibility |
 
-```yaml
-SYNTHESIZER:
-  SYNTHESIZER_TYPE: "gaussian_copula"
-  DEFAULT_PRODUCTS_ROWS: 50
-  DEFAULT_SALES_ROWS: 1000
+### SYNTHESIZER.METRICS Parameters
 
-  # Model training parameters
-  EPOCHS: 300                 # Training epochs for neural models
-  BATCH_SIZE: 500            # Batch size for training
+Function: `gaussian_copula`
 
-  # Quality vs speed tradeoff
-  ENFORCE_MIN_MAX_VALUES: true    # Enforce realistic value ranges
-  ENFORCE_ROUNDING: true          # Round to appropriate precision
-```
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `training_data_path` | string | **Required** | Path to CSV file with real sales data |
+| `num_rows` | int | 1000 | Number of synthetic sales records to generate |
+| `seed` | int | null | Random seed for reproducibility |
 
 ## Enrichment Configuration
 
-Enrichment applies treatment effects to simulate A/B testing scenarios.
+Enrichment configurations are separate YAML files used with the `enrich()` function.
 
-### Basic Impact Configuration
+### Structure
 
 ```yaml
 IMPACT:
-  FUNCTION: "combined_boost"     # Impact function name
-  PARAMS:                        # Function-specific parameters
-    effect_size: 0.5            # 50% improvement
-    ramp_days: 7                # Gradual rollout over 7 days
-    enrichment_fraction: 0.3    # 30% of products get enriched
-    enrichment_start: "2024-11-15"  # When enrichment begins
-    seed: 42                    # Reproducibility for treatment assignment
+  FUNCTION: "function_name"
+  PARAMS:
+    # Function-specific parameters
 ```
 
-### Available Impact Functions
+### Built-in Enrichment Functions
+
+#### combined_boost
+
+Gradual rollout with partial treatment (most realistic).
+
+```yaml
+IMPACT:
+  FUNCTION: "combined_boost"
+  PARAMS:
+    effect_size: 0.5              # 50% boost in ordered_units
+    ramp_days: 7                  # Gradual ramp-up over 7 days
+    enrichment_fraction: 0.3      # 30% of products get enriched
+    enrichment_start: "2024-11-15"  # Start date
+    seed: 42                      # Reproducible product selection
+```
+
+**Parameters**:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `effect_size` | float | 0.5 | Maximum boost (0.5 = 50% increase) |
+| `ramp_days` | int | 7 | Days for effect to reach full strength |
+| `enrichment_fraction` | float | 0.3 | Fraction of products to enrich (0.0-1.0) |
+| `enrichment_start` | string | "2024-11-15" | Start date (YYYY-MM-DD) |
+| `seed` | int | 42 | Random seed for product selection |
+
+**Behavior**:
+- Selects random fraction of products for enrichment
+- Effect ramps up linearly over `ramp_days`
+- After ramp period, full `effect_size` is applied
+- Increases `ordered_units` for enriched products
+- Recalculates `revenue` = `ordered_units` × `price`
 
 #### quantity_boost
-Simple multiplicative increase in sale quantities.
+
+Simple multiplicative boost (no ramp-up).
 
 ```yaml
 IMPACT:
   FUNCTION: "quantity_boost"
   PARAMS:
-    effect_size: 0.3           # 30% increase in quantities
+    effect_size: 0.5
+    enrichment_fraction: 0.3
+    enrichment_start: "2024-11-15"
+    seed: 42
 ```
 
+**Parameters**: Same as `combined_boost` except no `ramp_days`.
+
+**Behavior**: Immediate full effect on enrichment start date.
+
 #### probability_boost
-Increases the probability of sales occurring.
+
+Alias for `quantity_boost` (probability reflected in quantity for existing sales).
 
 ```yaml
 IMPACT:
   FUNCTION: "probability_boost"
   PARAMS:
-    effect_size: 0.2           # 20% increase in sale probability
-```
-
-#### combined_boost (Recommended)
-Realistic gradual rollout with partial treatment.
-
-```yaml
-IMPACT:
-  FUNCTION: "combined_boost"
-  PARAMS:
-    effect_size: 0.5           # 50% improvement when fully ramped
-    ramp_days: 7               # Linear ramp over 7 days
-    enrichment_fraction: 0.3   # 30% of products treated
-    enrichment_start: "2024-11-15"  # Start date for treatment
-    seed: 42                   # Seed for treatment assignment
-```
-
-## Configuration Examples
-
-### Quick Testing
-Minimal configuration for rapid iteration:
-
-```yaml
-SEED: 42
-OUTPUT:
-  DIR: "test_output"
-  FILE_PREFIX: "quick_test"
-RULE:
-  NUM_PRODUCTS: 10
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-03"
-  SALE_PROB: 1.0
-```
-
-### Educational Demo
-Balanced dataset for teaching:
-
-```yaml
-SEED: 123
-OUTPUT:
-  DIR: "demo_output"
-  FILE_PREFIX: "classroom_demo"
-RULE:
-  NUM_PRODUCTS: 50
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-07"
-  SALE_PROB: 0.8
-```
-
-### Research Experiment
-Large-scale synthetic data generation:
-
-```yaml
-SEED: 42
-OUTPUT:
-  DIR: "research_output"
-  FILE_PREFIX: "experiment_001"
-SYNTHESIZER:
-  SYNTHESIZER_TYPE: "gaussian_copula"
-  DEFAULT_PRODUCTS_ROWS: 500
-  DEFAULT_SALES_ROWS: 10000
-```
-
-### A/B Test Simulation
-Complete enrichment workflow:
-
-```yaml
-# Simulation config
-SEED: 42
-OUTPUT:
-  DIR: "ab_test_output"
-  FILE_PREFIX: "baseline"
-RULE:
-  NUM_PRODUCTS: 200
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-30"
-  SALE_PROB: 0.6
-
----
-# Enrichment config (separate file)
-IMPACT:
-  FUNCTION: "combined_boost"
-  PARAMS:
-    effect_size: 0.4
-    ramp_days: 5
-    enrichment_fraction: 0.25
+    effect_size: 0.5
+    enrichment_fraction: 0.3
     enrichment_start: "2024-11-15"
     seed: 42
 ```
 
 ## Configuration Validation
 
-The system validates configurations at runtime and provides helpful error messages:
+The config processor validates all configurations and provides clear error messages:
 
-### Common Validation Errors
+**Common Errors**:
+- ❌ Including both `RULE` and `SYNTHESIZER` (choose one)
+- ❌ Missing required parameters
+- ❌ Typos in parameter names
+- ❌ Invalid parameter types
+- ❌ `training_data_path: null` for synthesizer mode
+
+**Example Validation Error**:
+```
+ValueError: Unexpected parameters for RULE.METRICS.simulate_metrics_rule_based:
+['SALE_PROB']. Expected: ['cart_to_order_rate', 'date_end', 'date_start',
+'granularity', 'impression_to_visit_rate', 'sale_prob', 'seed', 'visit_to_cart_rate']
+```
+
+## Complete Configuration Examples
+
+### Minimal Configuration
 
 ```yaml
-# ERROR: Invalid date format
-DATE_START: "11/01/2024"  # Should be "2024-11-01"
-
-# ERROR: Probability out of range
-SALE_PROB: 1.5            # Should be 0.0-1.0
-
-# ERROR: Missing required field
 RULE:
-  NUM_PRODUCTS: 100
-  # Missing DATE_START and DATE_END
-
-# ERROR: Invalid synthesizer type
-SYNTHESIZER:
-  SYNTHESIZER_TYPE: "invalid_type"  # Should be supported type
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 20
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-11-01"
+      date_end: "2024-11-07"
+      sale_prob: 0.8
 ```
 
-### Validation Messages
-The system provides clear feedback:
-
-```
-ConfigurationError: DATE_START must be in YYYY-MM-DD format, got '11/01/2024'
-ConfigurationError: SALE_PROB must be between 0.0 and 1.0, got 1.5
-ConfigurationError: Missing required field 'DATE_START' in RULE section
-```
-
-## Best Practices
-
-### Reproducibility
-Always set a seed for reproducible results:
+### Production Configuration
 
 ```yaml
-SEED: 42  # Use consistent seed across experiments
-```
+STORAGE:
+  PATH: "output/production_sim"
 
-### File Organization
-Use descriptive prefixes and organized directories:
-
-```yaml
-OUTPUT:
-  DIR: "experiments/2024-11/baseline"
-  FILE_PREFIX: "exp_001_baseline"
-```
-
-### Parameter Tuning
-Start with conservative parameters and iterate:
-
-```yaml
-# Start conservative
 RULE:
-  NUM_PRODUCTS: 50      # Small for testing
-  SALE_PROB: 0.5        # Moderate probability
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 1000
+      seed: 42
 
-# Scale up after validation
-RULE:
-  NUM_PRODUCTS: 500     # Production scale
-  SALE_PROB: 0.7        # Tuned probability
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-01-01"
+      date_end: "2024-12-31"
+      sale_prob: 0.65
+      seed: 42
+      granularity: "daily"
+      impression_to_visit_rate: 0.18
+      visit_to_cart_rate: 0.28
+      cart_to_order_rate: 0.82
 ```
 
-### Enrichment Testing
-Test enrichment effects with known parameters:
+### Weekly Aggregation Configuration
 
 ```yaml
-IMPACT:
-  FUNCTION: "quantity_boost"
-  PARAMS:
-    effect_size: 0.1    # Small, measurable effect for validation
+STORAGE:
+  PATH: "output/weekly_metrics"
+
+RULE:
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 100
+      seed: 42
+
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-01-01"
+      date_end: "2024-12-31"
+      sale_prob: 0.7
+      seed: 42
+      granularity: "weekly"  # Weekly aggregation
 ```
 
-## Configuration Inheritance
+## Custom Functions
 
-The system supports configuration inheritance through defaults:
+You can register custom simulation and enrichment functions:
 
-1. **Built-in defaults** (config_defaults.yaml)
-2. **User configuration** (your YAML file)
-3. **Runtime overrides** (programmatic changes)
+```python
+from online_retail_simulator import register_metrics_function
 
-Later configurations override earlier ones, allowing flexible customization while maintaining sensible defaults.
+def my_custom_metrics(product_characteristics, config):
+    # Your custom implementation
+    return sales_df
+
+# Register it
+register_metrics_function("my_custom_metrics", my_custom_metrics)
+```
+
+Then use in configuration:
+
+```yaml
+RULE:
+  METRICS:
+    FUNCTION: my_custom_metrics
+    PARAMS:
+      # Your custom parameters (no validation)
+      my_param1: value1
+      my_param2: value2
+```
+
+**Note**: Custom functions skip parameter validation since their schemas aren't known at config time.
+
+## Next Steps
+
+- **Examples**: See [User Guide](user-guide.md) for practical examples
+- **API**: See [API Reference](api_reference.rst) for function documentation
+- **Design**: See [Design Architecture](design.md) for system internals

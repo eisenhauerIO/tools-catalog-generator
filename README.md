@@ -12,9 +12,10 @@ pip install -e .
 python demo/run_all_demos.py
 
 # Generate data
-python -c "from online_retail_simulator import simulate; \
-    df = simulate('demo/simulate/config_default_simulation.yaml'); \
-    print(f'Generated {len(df)} sales records')"
+python -c "from online_retail_simulator import simulate, load_job_results; \
+    job = simulate('demo/simulate/config_default_simulation.yaml'); \
+    _, sales = load_job_results(job); \
+    print(f'Generated {len(sales)} sales records')"
 ```
 
 ## Who Should Use This?

@@ -123,12 +123,19 @@ print(f"Generated {len(sales_df)} sales records for ML training")
 
 **Configuration Example**:
 ```yaml
-SEED: 42
 RULE:
-  NUM_PRODUCTS: 1000
-  DATE_START: "2024-01-01"
-  DATE_END: "2024-12-31"
-  SALE_PROB: 0.6
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 1000
+      seed: 42
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-01-01"
+      date_end: "2024-12-31"
+      sale_prob: 0.6
+      seed: 42
 ```
 
 ### Product Manager: A/B Test Simulation
@@ -163,11 +170,19 @@ print(f"Projected revenue lift: {lift:.1f}%")
 
 **Configuration Example**:
 ```yaml
-SEED: 42
 SYNTHESIZER:
-  SYNTHESIZER_TYPE: gaussian_copula
-  DEFAULT_PRODUCTS_ROWS: 500
-  DEFAULT_SALES_ROWS: 10000
+  CHARACTERISTICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: "data/products.csv"
+      num_rows: 500
+      seed: 42
+  METRICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: "data/sales.csv"
+      num_rows: 10000
+      seed: 42
 ```
 
 ### Educator: Teaching Analytics Concepts
@@ -195,12 +210,21 @@ python demo/run_all_demos.py
 
 **Configuration Example**:
 ```yaml
-SEED: 123
+STORAGE:
+  PATH: "output/class_demo"
 RULE:
-  NUM_PRODUCTS: 50
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-07"
-  SALE_PROB: 0.8
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 50
+      seed: 123
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-11-01"
+      date_end: "2024-11-07"
+      sale_prob: 0.8
+      seed: 123
 ```
 
 ### Developer: Application Testing
@@ -231,12 +255,21 @@ assert all(sales_df['revenue'] == sales_df['price'] * sales_df['ordered_units'])
 
 **Configuration Example**:
 ```yaml
-SEED: 999
+STORAGE:
+  PATH: "output/test_data"
 RULE:
-  NUM_PRODUCTS: 10
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-01"
-  SALE_PROB: 1.0
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 10
+      seed: 999
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-11-01"
+      date_end: "2024-11-01"
+      sale_prob: 1.0
+      seed: 999
 ```
 
 ### Advanced Use Cases
@@ -304,39 +337,61 @@ For complete configuration documentation, see the [Configuration Reference](conf
 **Minimal Configuration**:
 ```yaml
 # minimal_config.yaml
-SEED: 42
 STORAGE:
   PATH: "output"
 RULE:
-  NUM_PRODUCTS: 20
-  DATE_START: "2024-11-01"
-  DATE_END: "2024-11-07"
-  SALE_PROB: 0.7
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 20
+      seed: 42
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-11-01"
+      date_end: "2024-11-07"
+      sale_prob: 0.7
+      seed: 42
 ```
 
 **Large Dataset Configuration**:
 ```yaml
 # large_dataset_config.yaml
-SEED: 42
 STORAGE:
   PATH: "output"
 RULE:
-  NUM_PRODUCTS: 1000
-  DATE_START: "2024-01-01"
-  DATE_END: "2024-12-31"
-  SALE_PROB: 0.6
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 1000
+      seed: 42
+  METRICS:
+    FUNCTION: simulate_metrics_rule_based
+    PARAMS:
+      date_start: "2024-01-01"
+      date_end: "2024-12-31"
+      sale_prob: 0.6
+      seed: 42
 ```
 
 **ML-Based Generation**:
 ```yaml
 # ml_config.yaml
-SEED: 42
 STORAGE:
   PATH: "output"
 SYNTHESIZER:
-  SYNTHESIZER_TYPE: "gaussian_copula"
-  DEFAULT_PRODUCTS_ROWS: 200
-  DEFAULT_SALES_ROWS: 5000
+  CHARACTERISTICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: "data/products.csv"
+      num_rows: 200
+      seed: 42
+  METRICS:
+    FUNCTION: gaussian_copula
+    PARAMS:
+      training_data_path: "data/sales.csv"
+      num_rows: 5000
+      seed: 42
 ```
 
 ### Tutorial 3: Enrichment Workflows

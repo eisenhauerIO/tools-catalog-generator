@@ -33,11 +33,20 @@ Make your changes in the primary location first.
 
 **CRITICAL**: Before finalizing documentation changes, verify all examples match the actual codebase:
 
+**For API Documentation**:
 - Check API signatures in `online_retail_simulator/__init__.py` for public API
 - Verify function parameters match actual implementation
-- Confirm configuration keys match actual config processor
 - Test code examples actually run without errors
 - Verify data schemas match actual DataFrame outputs
+
+**For Configuration Documentation** (configuration.md):
+- **Primary source**: `online_retail_simulator/config_defaults.yaml` - all default values
+- **Validation logic**: `online_retail_simulator/config_processor.py` - structure and validation
+- Verify all parameter names match defaults file exactly
+- Verify default values match defaults file exactly
+- Check that CHARACTERISTICS/METRICS structure is correct
+- Verify function names (e.g., `simulate_characteristics_rule_based`)
+- Test configuration examples with actual config processor
 
 **Common verification points**:
 - `simulate()` returns `JobInfo`, not `DataFrame`
@@ -45,6 +54,7 @@ Make your changes in the primary location first.
 - Use `load_job_results(job_info)` to get DataFrames
 - Config uses `STORAGE.PATH` not `OUTPUT.DIR`
 - Rule config has nested `CHARACTERISTICS` and `METRICS` sections
+- Parameter names are case-sensitive (e.g., `sale_prob` not `SALE_PROB`)
 
 ### 4. Update Cross-References
 
@@ -112,8 +122,9 @@ Here's all the configuration options... [300 lines of duplication]
 ```markdown
 <!-- Good: In README.md -->
 ```python
-from online_retail_simulator import simulate
-df = simulate("config.yaml")
+from online_retail_simulator import simulate, load_job_results
+job_info = simulate("config.yaml")
+_, sales_df = load_job_results(job_info)
 ```
 
 For more examples, see the [User Guide](https://eisenhauerio.github.io/tools-catalog-generator/user-guide.html).
