@@ -7,6 +7,7 @@ from .enrich import (
     register_enrichment_function,
     register_enrichment_module,
 )
+from .manage import JobInfo, cleanup_old_jobs, list_jobs, load_job_metadata, load_job_results
 from .simulate import (
     get_simulation_function,
     list_simulation_functions,
@@ -17,7 +18,6 @@ from .simulate import (
     simulate_characteristics,
     simulate_metrics,
 )
-from .storage import cleanup_old_jobs, list_jobs, load_job_metadata, load_job_results
 
 __version__ = "0.1.0"
 __all__ = [
@@ -34,6 +34,7 @@ __all__ = [
     "register_simulation_module",
     "list_simulation_functions",
     "get_simulation_function",
+    "JobInfo",
     "load_job_results",
     "load_job_metadata",
     "list_jobs",

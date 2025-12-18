@@ -1,9 +1,9 @@
 """
-Job-based storage utilities for saving simulation results.
+Job management utilities for simulation results.
 """
 
-from .storage import save_simulation_data  # Legacy compatibility
-from .storage import (
+from .jobs import (
+    JobInfo,
     cleanup_old_jobs,
     generate_job_id,
     get_job_directory,
@@ -14,6 +14,7 @@ from .storage import (
 )
 
 __all__ = [
+    "JobInfo",
     "save_job_data",
     "load_job_results",
     "load_job_metadata",
@@ -21,5 +22,4 @@ __all__ = [
     "cleanup_old_jobs",
     "generate_job_id",
     "get_job_directory",
-    "save_simulation_data",  # Legacy
 ]

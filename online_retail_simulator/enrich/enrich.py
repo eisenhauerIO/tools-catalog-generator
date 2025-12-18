@@ -24,7 +24,7 @@ def enrich(config_path: str, job_id: str) -> str:
         str: New job ID for accessing the stored enriched results
     """
     from ..config_processor import process_config
-    from ..storage import load_job_results, save_job_data
+    from ..manage import load_job_results, save_job_data
 
     # Load data from job
     products_df, sales_df = load_job_results(job_id)

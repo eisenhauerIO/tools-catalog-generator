@@ -1,15 +1,27 @@
 """
-Job-based storage functions for simulation data.
+Job management functions for simulation data.
 """
 
 import json
 import shutil
 import uuid
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
+
+
+@dataclass
+class JobInfo:
+    """Information about a simulation job and its storage location."""
+
+    job_id: str
+    storage_path: str
+
+    def __str__(self) -> str:
+        return self.job_id
 
 
 def generate_job_id() -> str:
@@ -19,9 +31,9 @@ def generate_job_id() -> str:
     return f"job-{timestamp}-{short_uuid}"
 
 
-def get_job_directory(job_id: str) -> Path:
-    """Get the directory path for a job ID."""
-    return Path("output") / job_id
+def get_job_directory(job_info: JobInfo) -> Path:
+    """Get the directory path for a job."""
+    return Path(job_info.storage_path) / job_info.job_id
 
 
 def save_job_data(
@@ -30,7 +42,7 @@ def save_job_data(
     config: Dict,
     config_path: str,
     job_id: Optional[str] = None,
-) -> str:
+) -> JobInfo:
     """
     Save simulation data with automatic job-based storage.
 
@@ -42,13 +54,19 @@ def save_job_data(
         job_id: Optional job ID, auto-generated if not provided
 
     Returns:
-        str: The job ID used for storage
+        JobInfo: Information about the saved job
     """
     if job_id is None:
         job_id = generate_job_id()
 
+    # Extract storage path from config
+    storage_path = config.get("STORAGE", {}).get("PATH", ".")
+
+    # Create JobInfo
+    job_info = JobInfo(job_id=job_id, storage_path=storage_path)
+
     # Create job directory
-    job_path = get_job_directory(job_id)
+    job_path = get_job_directory(job_info)
     job_path.mkdir(parents=True, exist_ok=True)
 
     # Save data files
@@ -64,6 +82,7 @@ def save_job_data(
         "job_id": job_id,
         "timestamp": datetime.now().isoformat(),
         "config_path": config_path,
+        "storage_path": storage_path,
         "seed": config.get("SEED"),
         "mode": "RULE" if "RULE" in config else "SYNTHESIZER",
         "num_products": len(products_df),
@@ -75,15 +94,15 @@ def save_job_data(
     with open(job_path / "metadata.json", "w") as f:
         json.dump(metadata, f, indent=2, default=str)
 
-    return job_id
+    return job_info
 
 
-def load_job_results(job_id: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def load_job_results(job_info: JobInfo) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Load simulation results for a job ID.
+    Load simulation results for a job.
 
     Args:
-        job_id: The job ID to load
+        job_info: JobInfo containing job details
 
     Returns:
         Tuple of (products_df, sales_df)
@@ -91,7 +110,7 @@ def load_job_results(job_id: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     Raises:
         FileNotFoundError: If job directory or files don't exist
     """
-    job_path = get_job_directory(job_id)
+    job_path = get_job_directory(job_info)
 
     if not job_path.exists():
         raise FileNotFoundError(f"Job directory not found: {job_path}")
@@ -110,12 +129,12 @@ def load_job_results(job_id: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     return products_df, sales_df
 
 
-def load_job_metadata(job_id: str) -> Dict:
+def load_job_metadata(job_info: JobInfo) -> Dict:
     """
-    Load metadata for a job ID.
+    Load metadata for a job.
 
     Args:
-        job_id: The job ID to load metadata for
+        job_info: JobInfo containing job details
 
     Returns:
         Dict: Job metadata
@@ -123,7 +142,7 @@ def load_job_metadata(job_id: str) -> Dict:
     Raises:
         FileNotFoundError: If job directory or metadata file doesn't exist
     """
-    job_path = get_job_directory(job_id)
+    job_path = get_job_directory(job_info)
     metadata_path = job_path / "metadata.json"
 
     if not metadata_path.exists():
@@ -133,14 +152,17 @@ def load_job_metadata(job_id: str) -> Dict:
         return json.load(f)
 
 
-def list_jobs() -> List[str]:
+def list_jobs(storage_path: str = ".") -> List[str]:
     """
-    List all available job IDs.
+    List all available job IDs in a storage path.
+
+    Args:
+        storage_path: Base path where job directories are stored
 
     Returns:
         List of job IDs sorted by creation time (newest first)
     """
-    output_dir = Path("output")
+    output_dir = Path(storage_path)
     if not output_dir.exists():
         return []
 
@@ -153,17 +175,18 @@ def list_jobs() -> List[str]:
     return sorted(jobs, reverse=True)
 
 
-def cleanup_old_jobs(keep_count: int = 10) -> List[str]:
+def cleanup_old_jobs(storage_path: str = ".", keep_count: int = 10) -> List[str]:
     """
     Clean up old job directories, keeping only the most recent ones.
 
     Args:
+        storage_path: Base path where job directories are stored
         keep_count: Number of recent jobs to keep
 
     Returns:
         List of removed job IDs
     """
-    jobs = list_jobs()
+    jobs = list_jobs(storage_path)
     if len(jobs) <= keep_count:
         return []
 
@@ -171,25 +194,10 @@ def cleanup_old_jobs(keep_count: int = 10) -> List[str]:
     removed_jobs = []
 
     for job_id in jobs_to_remove:
-        job_path = get_job_directory(job_id)
+        job_info = JobInfo(job_id=job_id, storage_path=storage_path)
+        job_path = get_job_directory(job_info)
         if job_path.exists():
             shutil.rmtree(job_path)
             removed_jobs.append(job_id)
 
     return removed_jobs
-
-
-# Legacy function for backward compatibility
-def save_simulation_data(
-    products_df: pd.DataFrame,
-    sales_df: pd.DataFrame,
-    storage_path: str,
-    config: Dict,
-    config_path: str,
-) -> None:
-    """
-    Legacy storage function - now redirects to job-based storage.
-
-    Deprecated: Use save_job_data instead.
-    """
-    save_job_data(products_df, sales_df, config, config_path)
