@@ -29,16 +29,16 @@ IMPACT:
     try:
         # Generate test data
         test_config_path = os.path.join(os.path.dirname(__file__), "config_rule.yaml")
-        job_id = simulate(test_config_path)
+        job_info = simulate(test_config_path)
 
         # Apply enrichment
-        enriched_job_id = enrich(config_path, job_id)
+        enriched_job_info = enrich(config_path, job_info)
 
         # Load original and enriched data
         from online_retail_simulator import load_job_results
 
-        _, original_sales = load_job_results(job_id)
-        _, enriched_sales = load_job_results(enriched_job_id)
+        _, original_sales = load_job_results(job_info)
+        _, enriched_sales = load_job_results(enriched_job_info)
 
         # Verify structure
         assert isinstance(enriched_sales, pd.DataFrame)
@@ -76,16 +76,16 @@ IMPACT:
     try:
         # Generate test data
         test_config_path = os.path.join(os.path.dirname(__file__), "config_rule.yaml")
-        job_id = simulate(test_config_path)
+        job_info = simulate(test_config_path)
 
         # Apply enrichment
-        enriched_job_id = enrich(config_path, job_id)
+        enriched_job_info = enrich(config_path, job_info)
 
         # Load results
         from online_retail_simulator import load_job_results
 
-        _, original_sales = load_job_results(job_id)
-        _, enriched_sales = load_job_results(enriched_job_id)
+        _, original_sales = load_job_results(job_info)
+        _, enriched_sales = load_job_results(enriched_job_info)
 
         # Verify basic structure
         assert isinstance(enriched_sales, pd.DataFrame)
@@ -114,11 +114,11 @@ INVALID_KEY: "test"
     try:
         # Generate test data
         test_config_path = os.path.join(os.path.dirname(__file__), "config_rule.yaml")
-        sales_df = simulate(test_config_path)
+        job_info = simulate(test_config_path)
 
         # Should raise error for missing IMPACT
         with pytest.raises(ValueError, match="Config must include 'IMPACT' specification"):
-            enrich(config_path, sales_df)
+            enrich(config_path, job_info)
 
     finally:
         os.unlink(config_path)
@@ -138,9 +138,12 @@ IMPACT:
         config_path = f.name
 
     try:
-        # Test with invalid job_id
+        # Test with invalid job_info
+        from online_retail_simulator import JobInfo
+
+        invalid_job_info = JobInfo("invalid-job-id", ".")
         with pytest.raises(FileNotFoundError, match="Job directory not found"):
-            enrich(config_path, "invalid-job-id")
+            enrich(config_path, invalid_job_info)
 
     finally:
         os.unlink(config_path)
@@ -165,17 +168,17 @@ IMPACT:
     try:
         # Generate test data
         test_config_path = os.path.join(os.path.dirname(__file__), "config_rule.yaml")
-        job_id = simulate(test_config_path)
+        job_info = simulate(test_config_path)
 
         # Apply enrichment twice with same config (same seed)
-        enriched_job_id1 = enrich(config_path, job_id)
-        enriched_job_id2 = enrich(config_path, job_id)
+        enriched_job_info1 = enrich(config_path, job_info)
+        enriched_job_info2 = enrich(config_path, job_info)
 
         # Load results
         from online_retail_simulator import load_job_results
 
-        _, enriched_df1 = load_job_results(enriched_job_id1)
-        _, enriched_df2 = load_job_results(enriched_job_id2)
+        _, enriched_df1 = load_job_results(enriched_job_info1)
+        _, enriched_df2 = load_job_results(enriched_job_info2)
 
         # Results should be identical
         pd.testing.assert_frame_equal(enriched_df1, enriched_df2)

@@ -151,21 +151,19 @@ def test_clear_registry():
 
     register_characteristics_function("test", dummy_characteristics)
 
-    # Verify function is registered (should have "test" + actual names + "default")
+    # Verify function is registered (should have "test" + actual names)
     functions = SimulationRegistry.list_characteristics_functions()
     assert "test" in functions
-    assert "default" in functions
     assert "simulate_characteristics_rule_based" in functions
-    assert len(functions) == 3
+    assert len(functions) == 2
 
     # Clear and verify only defaults remain
     SimulationRegistry.clear_registry()
     functions = SimulationRegistry.list_all_functions()
     assert functions["characteristics"] == [
         "simulate_characteristics_rule_based",
-        "default",
     ]
-    assert functions["metrics"] == ["simulate_metrics_rule_based", "default"]
+    assert functions["metrics"] == ["simulate_metrics_rule_based"]
 
 
 def test_default_functions_registered():
@@ -176,12 +174,12 @@ def test_default_functions_registered():
     # Getting functions should trigger default registration
     functions = SimulationRegistry.list_all_functions()
 
-    assert "default" in functions["characteristics"]
-    assert "default" in functions["metrics"]
+    assert "simulate_characteristics_rule_based" in functions["characteristics"]
+    assert "simulate_metrics_rule_based" in functions["metrics"]
 
-    # Verify we can get the default functions
-    chars_func = SimulationRegistry.get_characteristics_function("default")
-    metrics_func = SimulationRegistry.get_metrics_function("default")
+    # Verify we can get the actual functions
+    chars_func = SimulationRegistry.get_characteristics_function("simulate_characteristics_rule_based")
+    metrics_func = SimulationRegistry.get_metrics_function("simulate_metrics_rule_based")
 
     assert chars_func is not None
     assert metrics_func is not None

@@ -1,5 +1,5 @@
 STORAGE:
-  PATH: demo/simulate/output/synthesizer_demo
+  PATH: output/synthesizer_demo
 
 SYNTHESIZER:
   CHARACTERISTICS:

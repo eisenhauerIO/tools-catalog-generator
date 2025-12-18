@@ -89,16 +89,16 @@ IMPACT:
     try:
         # Generate test data
         test_config_path = os.path.join(os.path.dirname(__file__), "config_rule.yaml")
-        job_id = simulate(test_config_path)
+        job_info = simulate(test_config_path)
 
         # Apply enrichment using registered function
-        enriched_job_id = enrich(config_path, job_id)
+        enriched_job_info = enrich(config_path, job_info)
 
         # Load results
         from online_retail_simulator import load_job_results
 
-        _, original_sales = load_job_results(job_id)
-        _, enriched_sales = load_job_results(enriched_job_id)
+        _, original_sales = load_job_results(job_info)
+        _, enriched_sales = load_job_results(enriched_job_info)
 
         # Verify doubling effect
         original_total = original_sales["quantity"].sum()
@@ -151,16 +151,16 @@ IMPACT:
     try:
         # Generate test data
         test_config_path = os.path.join(os.path.dirname(__file__), "config_rule.yaml")
-        job_id = simulate(test_config_path)
+        job_info = simulate(test_config_path)
 
         # Apply enrichment - should use registered version (triple)
-        enriched_job_id = enrich(config_path, job_id)
+        enriched_job_info = enrich(config_path, job_info)
 
         # Load results
         from online_retail_simulator import load_job_results
 
-        _, original_sales = load_job_results(job_id)
-        _, enriched_sales = load_job_results(enriched_job_id)
+        _, original_sales = load_job_results(job_info)
+        _, enriched_sales = load_job_results(enriched_job_info)
 
         # Verify tripling effect (not the built-in boost)
         original_total = original_sales["quantity"].sum()
