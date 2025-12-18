@@ -151,17 +151,18 @@ def test_clear_registry():
 
     register_characteristics_function("test", dummy_characteristics)
 
-    # Verify function is registered (should have "test" + "default")
+    # Verify function is registered (should have "test" + actual names + "default")
     functions = SimulationRegistry.list_characteristics_functions()
     assert "test" in functions
     assert "default" in functions
-    assert len(functions) == 2
+    assert "simulate_characteristics_rule_based" in functions
+    assert len(functions) == 3
 
     # Clear and verify only defaults remain
     SimulationRegistry.clear_registry()
     functions = SimulationRegistry.list_all_functions()
-    assert functions["characteristics"] == ["default"]
-    assert functions["metrics"] == ["default"]
+    assert functions["characteristics"] == ["simulate_characteristics_rule_based", "default"]
+    assert functions["metrics"] == ["simulate_metrics_rule_based", "default"]
 
 
 def test_default_functions_registered():

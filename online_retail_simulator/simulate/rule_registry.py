@@ -29,6 +29,11 @@ def _register_default_functions():
     from .characteristics_rule_based import simulate_characteristics_rule_based
     from .metrics_rule_based import simulate_metrics_rule_based
 
+    # Register under their actual function names
+    _CHARACTERISTICS_REGISTRY["simulate_characteristics_rule_based"] = simulate_characteristics_rule_based
+    _METRICS_REGISTRY["simulate_metrics_rule_based"] = simulate_metrics_rule_based
+
+    # Keep "default" for backward compatibility
     _CHARACTERISTICS_REGISTRY["default"] = simulate_characteristics_rule_based
     _METRICS_REGISTRY["default"] = simulate_metrics_rule_based
     _DEFAULTS_REGISTERED = True
