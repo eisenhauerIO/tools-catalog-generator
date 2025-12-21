@@ -1,8 +1,5 @@
 """Tests for enrichment impact library functions."""
 
-from datetime import datetime
-
-import pytest
 
 from online_retail_simulator.enrich.enrichment_library import combined_boost, probability_boost, quantity_boost
 

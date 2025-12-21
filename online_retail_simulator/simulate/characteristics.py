@@ -32,7 +32,6 @@ def simulate_characteristics(config_path: str) -> JobInfo:
 
 def _generate_characteristics(config: dict):
     """Generate characteristics DataFrame based on config backend."""
-    import pandas as pd
 
     # Simple either/or logic: RULE or SYNTHESIZER, not both, not neither
     if "RULE" in config:

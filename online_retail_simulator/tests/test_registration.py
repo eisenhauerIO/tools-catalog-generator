@@ -3,7 +3,6 @@
 import os
 import tempfile
 
-import pandas as pd
 import pytest
 
 from online_retail_simulator import (

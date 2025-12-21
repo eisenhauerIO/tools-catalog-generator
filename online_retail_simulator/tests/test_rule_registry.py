@@ -8,7 +8,6 @@ from online_retail_simulator.simulate import (
     list_simulation_functions,
     register_characteristics_function,
     register_metrics_function,
-    register_simulation_module,
 )
 from online_retail_simulator.simulate.rule_registry import clear_simulation_registry
 

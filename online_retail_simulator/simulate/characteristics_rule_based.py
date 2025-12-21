@@ -4,7 +4,7 @@ Rule-based product characteristics simulation.
 
 import random
 import string
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import pandas as pd
 

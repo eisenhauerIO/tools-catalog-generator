@@ -5,7 +5,6 @@ a modified sale dictionary with the treatment effect applied.
 """
 
 from datetime import datetime
-from typing import Dict
 
 
 def quantity_boost(sales: list, **kwargs) -> list:
