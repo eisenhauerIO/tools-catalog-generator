@@ -143,6 +143,100 @@ enriched_job = enrich("enrichment_config.yaml", baseline_job)
 - Scalable to complex scenarios
 - Research-grade synthetic data
 
+## Backend Plugin Architecture
+
+The simulation system uses a plugin architecture for backend dispatch, making it easy
+to add new generation backends without modifying core orchestration code.
+
+### Core Components
+
+```python
+# core/backends.py
+
+class SimulationBackend(ABC):
+    """Abstract base class for simulation backends."""
+
+    def simulate_characteristics(self) -> pd.DataFrame:
+        """Generate product characteristics."""
+        ...
+
+    def simulate_metrics(self, product_characteristics: pd.DataFrame) -> pd.DataFrame:
+        """Generate metrics based on characteristics."""
+        ...
+
+    @classmethod
+    def get_key(cls) -> str:
+        """Config key that triggers this backend (e.g., 'RULE')."""
+        ...
+
+
+class BackendRegistry:
+    """Registry for discovering and instantiating backends."""
+
+    @classmethod
+    def register(cls, backend_cls):
+        """Register a backend class."""
+
+    @classmethod
+    def detect_backend(cls, config) -> SimulationBackend:
+        """Detect and instantiate appropriate backend from config."""
+```
+
+### Built-in Backends
+
+| Backend | Config Key | Description |
+|---------|------------|-------------|
+| `RuleBackend` | `RULE` | Deterministic rule-based generation |
+| `SynthesizerBackend` | `SYNTHESIZER` | ML-based generation using SDV |
+
+### Backend Detection
+
+The system automatically detects which backend to use based on config keys:
+
+```python
+# Config with RULE key -> RuleBackend
+config = {"RULE": {"CHARACTERISTICS": {...}, "METRICS": {...}}}
+
+# Config with SYNTHESIZER key -> SynthesizerBackend
+config = {"SYNTHESIZER": {"CHARACTERISTICS": {...}, "METRICS": {...}}}
+```
+
+### Adding Custom Backends
+
+To add a new backend (e.g., CTGAN, TVAE):
+
+```python
+from online_retail_simulator.core.backends import (
+    BackendRegistry,
+    SimulationBackend,
+)
+
+@BackendRegistry.register
+class CTGANBackend(SimulationBackend):
+
+    @classmethod
+    def get_key(cls) -> str:
+        return "CTGAN"
+
+    def simulate_characteristics(self) -> pd.DataFrame:
+        # Your CTGAN implementation
+        ...
+
+    def simulate_metrics(self, product_characteristics: pd.DataFrame) -> pd.DataFrame:
+        # Your CTGAN implementation
+        ...
+```
+
+Once registered, use it with:
+
+```yaml
+CTGAN:
+  CHARACTERISTICS:
+    PARAMS: {...}
+  METRICS:
+    PARAMS: {...}
+```
+
 ## Enrichment System
 
 ### Function Registry

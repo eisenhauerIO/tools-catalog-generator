@@ -14,7 +14,6 @@ repos:
       - id: black
         language_version: python3
         files: ^online_retail_simulator/.*\.py$
-        exclude: ^online_retail_simulator/tests/test_code_quality\.py$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.4
@@ -22,13 +21,12 @@ repos:
       - id: ruff
         args: [--fix]
         files: ^online_retail_simulator/.*\.py$
-        exclude: ^online_retail_simulator/tests/test_code_quality\.py$
 
   - repo: local
     hooks:
       - id: pytest-check
         name: pytest-check
-        entry: hatch run pytest online_retail_simulator/tests/ -v --ignore=online_retail_simulator/tests/test_code_quality.py
+        entry: hatch run pytest online_retail_simulator/tests/ -v
         language: system
         pass_filenames: false
         always_run: true
