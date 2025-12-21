@@ -33,7 +33,7 @@ dependencies = [
     "pyyaml",
     "pytest>=7.0",
     "ruff>=0.8.0",
-    "artifact-store @ file:///home/peisenha/office/business/eisenhauer-io/tools/impact-engine/_external/utils-artifact-store"
+    "artifact-store @ git+https://github.com/eisenhauerIO/utils-artifact-store.git@b389fc5c3e558659626408996d9c896daed00b68"
 ]
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
@@ -65,7 +65,7 @@ classifiers = [
 dependencies = [
     "pandas>=1.3.0",
     "pyyaml",
-    "artifact-store @ file:///home/peisenha/office/business/eisenhauer-io/tools/impact-engine/_external/utils-artifact-store"
+    "artifact-store @ git+https://github.com/eisenhauerIO/utils-artifact-store.git@b389fc5c3e558659626408996d9c896daed00b68"
 ]
 
 
@@ -74,7 +74,7 @@ synthesizer = [
     "sdv>=1.0.0"
 ]
 cloud = [
-    "artifact-store[cloud] @ git+https://github.com/eisenhauerIO/utils-artifact-store.git@159535ff55a0bf02339cff88050eddfad945fa23",
+    "artifact-store[cloud] @ git+https://github.com/eisenhauerIO/utils-artifact-store.git@b389fc5c3e558659626408996d9c896daed00b68",
 ]
 dev = [
     "pytest>=7.0",
