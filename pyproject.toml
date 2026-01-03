@@ -31,6 +31,7 @@ skip-install = false
 dependencies = [
     "pandas>=1.3.0",
     "pyyaml",
+    "requests",
     "pytest>=7.0",
     "ruff>=0.8.0",
     "artifact-store @ git+https://github.com/eisenhauerIO/utils-artifact-store.git@b389fc5c3e558659626408996d9c896daed00b68"
