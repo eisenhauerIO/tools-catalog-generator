@@ -12,11 +12,14 @@ dependencies = [
     "nbconvert",
     "jupyter",
     "jupyterlab",
+    "matplotlib>=3.5.0",
+    "seaborn>=0.12.0",
     "sphinx>=4.0.0",
     "sphinx-rtd-theme>=1.0.0",
     "myst-parser>=0.18.0",
     "sphinx-autodoc-typehints>=1.12.0",
-    "linkify-it-py>=2.0.0"
+    "linkify-it-py>=2.0.0",
+    "nbsphinx>=0.9.0"
 ]
 
 [tool.hatch.envs.default.scripts]

@@ -21,7 +21,11 @@ extensions = [
     "sphinx.ext.intersphinx",
     "myst_parser",
     "sphinx_rtd_theme",
+    "nbsphinx",
 ]
+
+# -- nbsphinx configuration --------------------------------------------------
+nbsphinx_execute = "never"  # Don't execute notebooks during build
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]

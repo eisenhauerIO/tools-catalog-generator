@@ -56,6 +56,7 @@ Table of Contents
    :maxdepth: 2
    :caption: Contents:
 
+   notebooks/package_overview
    user-guide
    configuration
    design
