@@ -2,8 +2,7 @@
 Enrich workflow: applies enrichment treatments to sales data.
 """
 
-from ..config_processor import process_config
-from ..manage import JobInfo, load_dataframe, save_dataframe, save_job_metadata
+from ..manage import JobInfo, load_dataframe, save_dataframe, update_job_metadata
 from .enrichment import enrich as apply_enrichment
 
 
@@ -32,7 +31,6 @@ def enrich(config_path: str, job_info: JobInfo) -> JobInfo:
     save_dataframe(job_info, "enriched", enriched_df)
 
     # Update metadata
-    config = process_config(config_path)
-    save_job_metadata(job_info, config, config_path, num_enriched=len(enriched_df))
+    update_job_metadata(job_info, is_enriched=True)
 
     return job_info

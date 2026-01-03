@@ -13,7 +13,7 @@ from .jobs import (
     load_job_results,
     save_dataframe,
     save_job_data,
-    save_job_metadata,
+    update_job_metadata,
 )
 
 __all__ = [
@@ -22,7 +22,7 @@ __all__ = [
     "save_dataframe",
     "load_dataframe",
     "save_job_data",
-    "save_job_metadata",
+    "update_job_metadata",
     "load_job_results",
     "load_job_metadata",
     "list_jobs",

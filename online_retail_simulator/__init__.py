@@ -26,6 +26,7 @@ from .simulate import (
     simulate,
     simulate_characteristics,
     simulate_metrics,
+    simulate_product_details,
 )
 
 __version__ = "0.1.0"
@@ -33,6 +34,7 @@ __all__ = [
     # Simulation
     "simulate",
     "simulate_characteristics",
+    "simulate_product_details",
     "simulate_metrics",
     # Enrichment
     "enrich",

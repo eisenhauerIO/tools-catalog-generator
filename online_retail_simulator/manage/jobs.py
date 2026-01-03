@@ -98,28 +98,28 @@ def load_dataframe(job_info: JobInfo, name: str) -> Optional[pd.DataFrame]:
     return store.read_csv(file_path)
 
 
-def save_job_metadata(job_info: JobInfo, config: Dict, config_path: str, **extra) -> None:
+def update_job_metadata(job_info: JobInfo, **flags) -> None:
     """
-    Save or update job metadata.
+    Update job metadata with step completion flags.
 
     Args:
         job_info: JobInfo for the job
-        config: Configuration dictionary
-        config_path: Path to original config file
-        **extra: Additional metadata fields
+        **flags: Step completion flags (e.g., has_characteristics=True)
     """
     store = job_info.get_store()
 
-    metadata = {
-        "job_id": job_info.job_id,
-        "timestamp": datetime.now().isoformat(),
-        "config_path": config_path,
-        "storage_path": job_info.storage_path,
-        "seed": config.get("SEED"),
-        "mode": "RULE" if "RULE" in config else "SYNTHESIZER",
-        "config": config,
-        **extra,
-    }
+    # Load existing metadata or start fresh
+    if store.exists("metadata.json"):
+        metadata = store.read_json("metadata.json")
+    else:
+        metadata = {
+            "job_id": job_info.job_id,
+            "storage_path": job_info.storage_path,
+        }
+
+    # Merge flags and update timestamp
+    metadata.update(flags)
+    metadata["timestamp"] = datetime.now().isoformat()
 
     store.write_json("metadata.json", metadata)
 
@@ -148,13 +148,7 @@ def save_job_data(
 
     save_dataframe(job_info, "products", products_df)
     save_dataframe(job_info, "sales", sales_df)
-    save_job_metadata(
-        job_info,
-        config,
-        config_path,
-        num_products=len(products_df),
-        num_sales=len(sales_df),
-    )
+    update_job_metadata(job_info, has_characteristics=True, has_metrics=True)
 
     return job_info
 
