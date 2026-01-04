@@ -301,6 +301,75 @@ IMPACT:
     seed: 42
 ```
 
+## Product Details Configuration
+
+Product details generation adds titles, descriptions, brands, and features to products created by `simulate_characteristics()`.
+
+### Structure
+
+```yaml
+PRODUCT_DETAILS:
+  FUNCTION: "function_name"
+```
+
+### Built-in Product Details Functions
+
+#### simulate_product_details_mock
+
+Rule-based generation using templates (default, no external dependencies).
+
+```yaml
+PRODUCT_DETAILS:
+  FUNCTION: simulate_product_details_mock
+```
+
+Generates realistic mock data based on product category. No additional parameters required.
+
+#### simulate_product_details_ollama
+
+LLM-based generation using local Ollama for more realistic content.
+
+```yaml
+PRODUCT_DETAILS:
+  FUNCTION: simulate_product_details_ollama
+```
+
+Requires Ollama running locally at `http://localhost:11434` with a compatible model.
+
+### Complete Example
+
+```yaml
+STORAGE:
+  PATH: "output/product_catalog"
+
+RULE:
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 50
+      seed: 42
+
+PRODUCT_DETAILS:
+  FUNCTION: simulate_product_details_mock
+```
+
+### Usage
+
+```python
+from online_retail_simulator import simulate_characteristics, simulate_product_details, load_job_results
+
+# Generate base products
+job_info = simulate_characteristics("config.yaml")
+
+# Add product details
+job_info = simulate_product_details(job_info, "config.yaml")
+
+# Load enriched products
+results = load_job_results(job_info)
+products_df = results["products"]
+# products_df now includes: title, description, brand, features
+```
+
 ## Configuration Validation
 
 The config processor validates all configurations and provides clear error messages:

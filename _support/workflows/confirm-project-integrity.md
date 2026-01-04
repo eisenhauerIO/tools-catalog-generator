@@ -29,17 +29,25 @@ All steps must be run inside a freshly pruned [hatch](https://hatch.pypa.io/) en
      ```
    - If any test fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
-4. **Run All Demo Scripts in Hatch**
+4. **Run Pre-commit Hooks**
+   - Run:
+     ```bash
+     pre-commit run --all-files
+     ```
+   - This validates code formatting (black), import sorting (isort), linting (flake8), and other hooks.
+   - If any hook fails (non-zero exit code), STOP. Ask the user for input before continuing.
+
+5. **Run All Demo Scripts in Hatch**
    - Run:
      ```bash
      cd demo && hatch run python run_all_demos.py
      ```
    - If any demo script fails (non-zero exit code), STOP. Ask the user for input before continuing.
 
-5. **Verify Documentation Integrity**
+6. **Verify Documentation Integrity**
    - Build the Sphinx documentation:
      ```bash
-     cd docs && hatch run make html
+     cd docs && hatch run docs
      ```
    - If the build fails or produces warnings, STOP. Ask the user for input before continuing.
    - Manually verify (spot check):
@@ -50,14 +58,4 @@ All steps must be run inside a freshly pruned [hatch](https://hatch.pypa.io/) en
      * Code examples match actual API (check against `online_retail_simulator/__init__.py`)
    - See [maintain-documentation.md](maintain-documentation.md) for the complete content ownership matrix
 
-6. **Clean Untracked Files and Directories**
-   - Run:
-     ```bash
-     git clean -xdf
-     ```
-   - This removes all untracked files and directories, ensuring a pristine working directory.
-
 ---
-
-- Optionally, validate demo output or add more steps as needed.
-- Reference this workflow in the README for new contributors.

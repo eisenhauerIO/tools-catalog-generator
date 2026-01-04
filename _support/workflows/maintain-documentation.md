@@ -16,6 +16,7 @@ Each piece of content has a single source of truth. When updating documentation,
 | API patterns | [user-guide.md#tutorials](../../docs/user-guide.md#tutorials) | [README.md](../../README.md) (quick reference only) |
 | Architecture & design | [design.md](../../docs/design.md) | None - technical reference only |
 | Impact functions | [configuration.md](../../docs/configuration.md) | [user-guide.md](../../docs/user-guide.md) (usage examples only) |
+| Product details | [configuration.md](../../docs/configuration.md) | [user-guide.md](../../docs/user-guide.md) (Tutorial 6) |
 
 ## Update Workflow
 
@@ -124,7 +125,7 @@ Here's all the configuration options... [300 lines of duplication]
 ```python
 from online_retail_simulator import simulate, load_job_results
 job_info = simulate("config.yaml")
-_, sales_df = load_job_results(job_info)
+sales_df = load_job_results(job_info)["sales"]
 ```
 
 For more examples, see the [User Guide](https://eisenhauerio.github.io/tools-catalog-generator/user-guide.html).

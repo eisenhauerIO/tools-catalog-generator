@@ -7,7 +7,7 @@ This script shows:
 3. Comparison of original vs enriched results
 """
 
-from online_retail_simulator import enrich, load_dataframe, simulate
+from online_retail_simulator import enrich, load_job_results, simulate
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     print(f"✓ Simulation completed. Job ID: {job_info}")
 
     # Load simulation results
-    sales_df = load_dataframe(job_info, "sales")
+    sales_df = load_job_results(job_info)["sales"]
     print(f"✓ Generated {len(sales_df)} sales records")
     print(f"✓ Date range: {sales_df['date'].min()} to {sales_df['date'].max()}")
     print(f"✓ Products: {sales_df['asin'].nunique()} unique ASINs")
@@ -34,7 +34,7 @@ def main():
     print("✓ Uses gradual 7-day ramp-up with 50% max effect")
 
     # Load enriched results
-    enriched_df = load_dataframe(enriched_job_info, "enriched")
+    enriched_df = load_job_results(enriched_job_info)["enriched"]
     print(f"✓ Applied enrichment to {len(enriched_df)} sales records")
 
     # Step 3: Compare results
@@ -56,7 +56,7 @@ def main():
         f"Revenue lift: {((enriched_post['revenue'].sum() / original_post['revenue'].sum()) - 1) * 100:.1f}%"
     )
 
-    print(f"\n✓ Results saved to: {job_info.full_path}/")
+    print(f"\n✓ Results saved to: {job_info.storage_path}/{job_info.job_id}/")
 
     print("\n" + "=" * 60)
     print("Default enrichment complete!")

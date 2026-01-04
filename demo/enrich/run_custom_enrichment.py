@@ -12,7 +12,7 @@ import random
 from datetime import datetime
 from typing import Dict, List
 
-from online_retail_simulator import enrich, load_dataframe, register_enrichment_function, simulate
+from online_retail_simulator import enrich, load_job_results, register_enrichment_function, simulate
 
 
 def price_discount(sales: List[Dict], **kwargs) -> List[Dict]:
@@ -88,7 +88,7 @@ def main():
     print(f"✓ Simulation completed. Job ID: {job_info}")
 
     # Load simulation results
-    sales_df = load_dataframe(job_info, "sales")
+    sales_df = load_job_results(job_info)["sales"]
     print(f"✓ Generated {len(sales_df)} sales records")
     print(f"✓ Date range: {sales_df['date'].min()} to {sales_df['date'].max()}")
     print(f"✓ Products: {sales_df['asin'].nunique()} unique ASINs")
@@ -100,7 +100,7 @@ def main():
     print("✓ Uses 25% price discount on 40% of products")
 
     # Load enriched results
-    enriched_df = load_dataframe(enriched_job_info, "enriched")
+    enriched_df = load_job_results(enriched_job_info)["enriched"]
     print(f"✓ Applied enrichment to {len(enriched_df)} sales records")
 
     # Step 4: Compare results
@@ -132,7 +132,7 @@ def main():
         f"Price change: {((enriched_avg_price / original_avg_price) - 1) * 100:+.1f}%"
     )
 
-    print(f"\n✓ Results saved to: {job_info.full_path}/")
+    print(f"\n✓ Results saved to: {job_info.storage_path}/{job_info.job_id}/")
 
     print("\n" + "=" * 60)
     print("Custom enrichment complete!")

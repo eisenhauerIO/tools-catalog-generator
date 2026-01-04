@@ -62,7 +62,7 @@ def analyze_results(sales_df, products_df, granularity, job_info):
     print(f"  Total revenue: ${sales_df['revenue'].sum():,.2f}")
     print(f"  Average order value: ${sales_df['revenue'].mean():.2f}")
 
-    print(f"\n✓ Results saved to: {job_info.full_path}/")
+    print(f"\n✓ Results saved to: {job_info.storage_path}/{job_info.job_id}/")
 
 
 def main():

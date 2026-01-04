@@ -9,7 +9,7 @@ This script shows:
 
 import os
 
-from online_retail_simulator import load_dataframe, simulate_characteristics, simulate_product_details
+from online_retail_simulator import load_job_results, simulate_characteristics, simulate_product_details
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config_product_details_simulation.yaml")
 
@@ -29,13 +29,13 @@ def main():
     # Step 1: Generate base products
     print("1. Generating base product characteristics...")
     job_info = simulate_characteristics(CONFIG_PATH)
-    products_df = load_dataframe(job_info, "products")
+    products_df = load_job_results(job_info)["products"]
     print(f"   ✓ Generated {len(products_df)} products")
 
     # Step 2: Add product details via Claude
     print("\n2. Enriching with Claude-generated details...")
     job_info = simulate_product_details(job_info, CONFIG_PATH)
-    detailed_df = load_dataframe(job_info, "products")
+    detailed_df = load_job_results(job_info)["products"]
     print(f"   ✓ Added details to {len(detailed_df)} products")
 
     # Step 3: Display results

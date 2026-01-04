@@ -156,9 +156,10 @@ baseline_job = simulate("simulation_config.yaml")
 enriched_job = enrich("enrichment_config.yaml", baseline_job)
 
 # Load and compare results
-from online_retail_simulator import load_dataframe
-baseline_df = load_dataframe(baseline_job, "sales")
-enriched_df = load_dataframe(enriched_job, "enriched")
+baseline_results = load_job_results(baseline_job)
+baseline_df = baseline_results["sales"]
+enriched_results = load_job_results(enriched_job)
+enriched_df = enriched_results["enriched"]
 
 lift = (enriched_df['revenue'].sum() / baseline_df['revenue'].sum() - 1) * 100
 print(f"Projected revenue lift: {lift:.1f}%")
@@ -238,11 +239,12 @@ RULE:
 **Solution**:
 ```python
 # Quick integration testing
-from online_retail_simulator import simulate, load_dataframe
+from online_retail_simulator import simulate, load_job_results
 
 # Generate test data matching your schema
 job_info = simulate("test_config.yaml")
-sales_df = load_dataframe(job_info, "sales")
+results = load_job_results(job_info)
+sales_df = results["sales"]
 
 # Use in your tests
 assert len(sales_df) > 0
@@ -325,16 +327,18 @@ print(f"Total revenue: ${sales_df['revenue'].sum():,.2f}")
 **Two-Step Generation** for more control:
 
 ```python
-from online_retail_simulator import simulate_characteristics, simulate_metrics, load_dataframe
+from online_retail_simulator import simulate_characteristics, simulate_metrics, load_job_results
 
 # Step 1: Generate product catalog
 job_info = simulate_characteristics("config.yaml")
-products_df = load_dataframe(job_info, "products")
+results = load_job_results(job_info)
+products_df = results["products"]
 print(f"Generated {len(products_df)} products")
 
 # Step 2: Generate sales transactions
 job_info = simulate_metrics(job_info, "config.yaml")
-sales_df = load_dataframe(job_info, "sales")
+results = load_job_results(job_info)
+sales_df = results["sales"]
 print(f"Generated {len(sales_df)} sales records")
 ```
 
@@ -407,16 +411,18 @@ SYNTHESIZER:
 **Basic Enrichment**:
 
 ```python
-from online_retail_simulator import simulate, enrich, load_dataframe
+from online_retail_simulator import simulate, enrich, load_job_results
 
 # Generate baseline data
 baseline_job = simulate("simulation_config.yaml")
-baseline_df = load_dataframe(baseline_job, "sales")
+baseline_results = load_job_results(baseline_job)
+baseline_df = baseline_results["sales"]
 print(f"Baseline revenue: ${baseline_df['revenue'].sum():,.2f}")
 
 # Apply enrichment
 enriched_job = enrich("enrichment_config.yaml", baseline_job)
-enriched_df = load_dataframe(enriched_job, "enriched")
+enriched_results = load_job_results(enriched_job)
+enriched_df = enriched_results["enriched"]
 print(f"Enriched revenue: ${enriched_df['revenue'].sum():,.2f}")
 
 # Calculate lift
@@ -440,13 +446,14 @@ IMPACT:
 **Multiple Enrichment Scenarios**:
 
 ```python
-from online_retail_simulator import simulate, enrich, load_dataframe
+from online_retail_simulator import simulate, enrich, load_job_results
 import yaml
 from pathlib import Path
 
 # Generate baseline once
 baseline_job = simulate("simulation_config.yaml")
-baseline_df = load_dataframe(baseline_job, "sales")
+baseline_results = load_job_results(baseline_job)
+baseline_df = baseline_results["sales"]
 baseline_revenue = baseline_df['revenue'].sum()
 
 # Test multiple scenarios
@@ -477,7 +484,8 @@ for i, params in enumerate(scenarios):
 
     # Apply enrichment
     enriched_job = enrich(config_path, baseline_job)
-    enriched_df = load_dataframe(enriched_job, "enriched")
+    enriched_results = load_job_results(enriched_job)
+    enriched_df = enriched_results["enriched"]
     lift = (enriched_df['revenue'].sum() / baseline_revenue - 1) * 100
 
     results.append({
@@ -500,7 +508,7 @@ for result in results:
 **Complete A/B Test Simulation**:
 
 ```python
-from online_retail_simulator import simulate, enrich, load_dataframe
+from online_retail_simulator import simulate, enrich, load_job_results
 import pandas as pd
 
 def run_ab_test(simulation_config, enrichment_config, test_name):
@@ -508,12 +516,14 @@ def run_ab_test(simulation_config, enrichment_config, test_name):
 
     # Generate control group (baseline)
     control_job = simulate(simulation_config)
-    control_df = load_dataframe(control_job, "sales")
+    control_results = load_job_results(control_job)
+    control_df = control_results["sales"]
     control_revenue = control_df['revenue'].sum()
 
     # Generate treatment group (enriched)
     treatment_job = enrich(enrichment_config, control_job)
-    treatment_df = load_dataframe(treatment_job, "enriched")
+    treatment_results = load_job_results(treatment_job)
+    treatment_df = treatment_results["enriched"]
     treatment_revenue = treatment_df['revenue'].sum()
 
     # Calculate metrics
@@ -584,13 +594,14 @@ print(results_df[['test_name', 'relative_lift_pct', 'absolute_lift']])
 **Category Analysis**:
 
 ```python
-from online_retail_simulator import simulate, load_dataframe
+from online_retail_simulator import simulate, load_job_results
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # Generate data
 job_info = simulate("config.yaml")
-sales_df = load_dataframe(job_info, "sales")
+results = load_job_results(job_info)
+sales_df = results["sales"]
 
 # Revenue by category
 category_revenue = sales_df.groupby('category')['revenue'].sum().sort_values(ascending=False)
@@ -652,6 +663,60 @@ print("\nMost Efficient Products (Revenue per Unit):")
 print(top_efficiency[['asin', 'category', 'revenue_per_unit']])
 ```
 
+### Tutorial 6: Product Details Generation
+
+Generate realistic product titles, descriptions, brands, and features to create complete product catalogs.
+
+**Basic Usage**:
+
+```python
+from online_retail_simulator import simulate_characteristics, simulate_product_details, load_job_results
+
+# Step 1: Generate base product characteristics
+job_info = simulate_characteristics("config.yaml")
+results = load_job_results(job_info)
+products_df = results["products"]
+print(f"Generated {len(products_df)} base products")
+
+# Step 2: Enrich with product details (title, description, brand)
+job_info = simulate_product_details(job_info, "config.yaml")
+results = load_job_results(job_info)
+detailed_df = results["products"]
+
+# Products now include additional columns
+print(detailed_df[['asin', 'category', 'title', 'brand']].head())
+```
+
+**Configuration**:
+
+```yaml
+# config.yaml
+STORAGE:
+  PATH: "output/product_details"
+
+RULE:
+  CHARACTERISTICS:
+    FUNCTION: simulate_characteristics_rule_based
+    PARAMS:
+      num_products: 50
+      seed: 42
+
+PRODUCT_DETAILS:
+  FUNCTION: simulate_product_details_mock
+```
+
+**Available Backends**:
+
+| Backend | Description |
+|---------|-------------|
+| `simulate_product_details_mock` | Rule-based generation using templates (default, no external dependencies) |
+| `simulate_product_details_ollama` | LLM-based generation using local Ollama for more realistic content |
+
+**When to Use**:
+- Creating complete product catalogs for demos
+- Testing product search and recommendation systems
+- Generating realistic test data for e-commerce applications
+
 ## Integration Guides
 
 ### Jupyter Notebook Integration
@@ -661,11 +726,12 @@ print(top_efficiency[['asin', 'category', 'revenue_per_unit']])
 %matplotlib inline
 import pandas as pd
 import matplotlib.pyplot as plt
-from online_retail_simulator import simulate, enrich, load_dataframe
+from online_retail_simulator import simulate, enrich, load_job_results
 
 # Cell 2: Generate data
 job_info = simulate("config.yaml")
-sales_df = load_dataframe(job_info, "sales")
+results = load_job_results(job_info)
+sales_df = results["sales"]
 print(f"Generated {len(sales_df)} records")
 sales_df.head()
 
@@ -683,11 +749,12 @@ plt.show()
 ### Pandas Integration
 
 ```python
-from online_retail_simulator import simulate, load_dataframe
+from online_retail_simulator import simulate, load_job_results
 
 # Seamless pandas integration
 job_info = simulate("config.yaml")
-sales_df = load_dataframe(job_info, "sales")
+results = load_job_results(job_info)
+sales_df = results["sales"]
 
 # Standard pandas operations work immediately
 summary_stats = sales_df.describe()

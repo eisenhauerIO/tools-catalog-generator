@@ -87,7 +87,8 @@ def load_config(config_path):
 # Generate product catalog, returns JobInfo
 job_info = simulate_characteristics(config)
 # Output: JobInfo (products.csv saved to job directory)
-products_df = load_dataframe(job_info, "products")
+results = load_job_results(job_info)
+products_df = results["products"]
 ```
 
 #### Phase 2: Sales Metrics
@@ -95,7 +96,8 @@ products_df = load_dataframe(job_info, "products")
 # Generate sales transactions, takes JobInfo
 job_info = simulate_metrics(job_info, config)
 # Output: JobInfo (sales.csv saved to job directory)
-sales_df = load_dataframe(job_info, "sales")
+results = load_job_results(job_info)
+sales_df = results["sales"]
 ```
 
 ### 3. Optional Enrichment
