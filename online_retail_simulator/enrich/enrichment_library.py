@@ -48,8 +48,12 @@ def quantity_boost(sales: list, **kwargs) -> list:
         sale_copy = copy.deepcopy(sale)
         sale_date = datetime.strptime(sale_copy["date"], "%Y-%m-%d")
 
+        # Track if product is in enrichment group
+        is_enriched = sale_copy["product_id"] in enriched_product_ids
+        sale_copy["enriched"] = is_enriched
+
         # Apply boost if product is enriched and date is after start
-        if sale_copy["product_id"] in enriched_product_ids and sale_date >= start_date:
+        if is_enriched and sale_date >= start_date:
             original_quantity = sale_copy["ordered_units"]
             sale_copy["ordered_units"] = int(original_quantity * (1 + effect_size))
             unit_price = sale_copy.get("unit_price", sale_copy.get("price"))
@@ -120,8 +124,12 @@ def combined_boost(sales: list, **kwargs) -> list:
         sale_copy = copy.deepcopy(sale)
         sale_date = datetime.strptime(sale_copy["date"], "%Y-%m-%d")
 
+        # Track if product is in enrichment group
+        is_enriched = sale_copy["product_id"] in enriched_product_ids
+        sale_copy["enriched"] = is_enriched
+
         # Apply ramped boost if product is enriched and date is after start
-        if sale_copy["product_id"] in enriched_product_ids and sale_date >= start_date:
+        if is_enriched and sale_date >= start_date:
             days_since_start = (sale_date - start_date).days
 
             # Handle zero ramp_days case
@@ -290,8 +298,12 @@ def _apply_sales_boost(
         product_id = sale_copy.get("product_id", sale_copy.get("asin"))
         sale_date = datetime.strptime(sale_copy["date"], "%Y-%m-%d")
 
+        # Track if product is in treatment group
+        is_enriched = product_id in treatment_ids
+        sale_copy["enriched"] = is_enriched
+
         # Apply ramped boost if product is in treatment and date is after start
-        if product_id in treatment_ids and sale_date >= start_date:
+        if is_enriched and sale_date >= start_date:
             days_since_start = (sale_date - start_date).days
 
             if ramp_days <= 0:

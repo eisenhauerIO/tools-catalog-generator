@@ -43,7 +43,16 @@ IMPACT:
         # Verify structure
         assert isinstance(enriched_sales, pd.DataFrame)
         assert len(enriched_sales) == len(original_sales)
-        assert list(enriched_sales.columns) == list(original_sales.columns)
+        # All original columns should be present, plus the new 'enriched' column
+        assert all(col in enriched_sales.columns for col in original_sales.columns)
+        assert "enriched" in enriched_sales.columns
+
+        # Verify enriched column has proper boolean values
+        assert enriched_sales["enriched"].dtype == bool
+        # With 50% enrichment_fraction, we expect roughly half of unique products to be enriched
+        enriched_products = enriched_sales[enriched_sales["enriched"]]["asin"].nunique()
+        total_products = enriched_sales["asin"].nunique()
+        assert 0.3 <= enriched_products / total_products <= 0.7  # Allow some variance
 
         # Verify enrichment effect (should have some ordered units increases)
         post_enrichment = enriched_sales[enriched_sales["date"] >= "2024-01-02"]
