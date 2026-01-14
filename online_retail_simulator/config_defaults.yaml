@@ -32,3 +32,27 @@ SYNTHESIZER:
       training_data_path: null
       num_rows: 1000
       seed: null
+
+# Enrichment impact function defaults
+IMPACT:
+  quantity_boost:
+    effect_size: 0.5
+    enrichment_fraction: 0.3
+    enrichment_start: "2024-11-15"
+    seed: 42
+    min_units: 1
+  probability_boost:
+    effect_size: 0.5
+    enrichment_fraction: 0.3
+    enrichment_start: "2024-11-15"
+    seed: 42
+    min_units: 1
+  product_detail_boost:
+    effect_size: 0.5
+    ramp_days: 7
+    enrichment_fraction: 0.3
+    enrichment_start: "2024-11-15"
+    seed: 42
+    prompt_path: null
+    backend: "mock"
+    quality_boost: 0.0

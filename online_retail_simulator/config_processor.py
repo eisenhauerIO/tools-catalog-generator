@@ -44,6 +44,21 @@ def load_defaults() -> Dict[str, Any]:
     return store.read_yaml(filename)
 
 
+def get_impact_defaults(function_name: str) -> Dict[str, Any]:
+    """
+    Get default parameters for an IMPACT enrichment function.
+
+    Args:
+        function_name: Name of the enrichment function (e.g., "product_detail_boost")
+
+    Returns:
+        Dictionary of default parameters for the function, or empty dict if not found
+    """
+    defaults = load_defaults()
+    impact_defaults = defaults.get("IMPACT", {})
+    return copy.deepcopy(impact_defaults.get(function_name, {}))
+
+
 def deep_merge(base: Dict, override: Dict) -> Dict:
     """
     Deep merge two dictionaries, with override values taking precedence.

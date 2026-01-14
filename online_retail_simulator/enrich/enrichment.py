@@ -133,9 +133,14 @@ def enrich(config_path: str, df: pd.DataFrame, job_info=None, products_df=None) 
         raise ValueError("Config must include 'IMPACT' specification")
 
     # Parse impact function
-    module_name, function_name, all_params = parse_impact_spec(impact_spec)
+    module_name, function_name, user_params = parse_impact_spec(impact_spec)
 
+    from ..config_processor import get_impact_defaults
     from .enrichment_registry import load_effect_function
+
+    # Merge user params over centralized defaults
+    default_params = get_impact_defaults(function_name)
+    all_params = {**default_params, **user_params}
 
     impact_function = load_effect_function(module_name, function_name)  # module_name ignored
 

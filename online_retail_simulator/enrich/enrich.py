@@ -28,8 +28,10 @@ def enrich(config_path: str, job_info: JobInfo) -> JobInfo:
     if metrics_df is None:
         raise FileNotFoundError(f"metrics.csv not found in job {job_info.job_id}")
 
-    # Load products from job (optional, for product-aware enrichment functions)
-    products_df = job_info.load_df("products")
+    # Load product_details (with quality_score) if available, fallback to products
+    products_df = job_info.load_df("product_details")
+    if products_df is None:
+        products_df = job_info.load_df("products")
 
     # Apply enrichment (pass job_info and products for product-aware functions)
     enriched_df, potential_outcomes_df = apply_enrichment(

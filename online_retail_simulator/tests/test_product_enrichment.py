@@ -186,7 +186,7 @@ def test_regenerate_product_details_helper():
     ]
     treatment_ids = {"A001", "A003"}
 
-    updated = _regenerate_product_details(products, treatment_ids, None, "mock", 42)
+    updated = _regenerate_product_details(products, treatment_ids, None, "mock", 42, quality_boost=0.0)
 
     # Check all products are returned
     assert len(updated) == 3
