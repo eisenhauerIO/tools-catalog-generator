@@ -6,6 +6,7 @@ RULE:
     FUNCTION: simulate_products_rule_based
     PARAMS:
       num_products: 10
+      seed: 12345
   METRICS:
     FUNCTION: simulate_metrics_rule_based
     PARAMS:
@@ -13,3 +14,4 @@ RULE:
       date_end: "2024-01-05"
       sale_prob: 0.7
       granularity: "daily"
+      seed: 12345
